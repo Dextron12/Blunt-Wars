@@ -67,6 +67,10 @@ class GUI(object):
 
     def __init__(self):
         self.fileList = []
+        self.viewLib = False
+        self.scroll = [0,0]
+        self.png = pygame.image.load(world.BASE_DIR + "/Resources/Icons/pictureIco.png")
+        self.png = pygame.transform.scale(self.png, (86,82))
 
     def imageBtn(self, x, y, image, action):
         mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
@@ -77,14 +81,35 @@ class GUI(object):
                 return True
         greeter.window.blit(image, (x,y))
 
+    def scrollBar(self, x, y, w, h):
+        pygame.draw.rect(greeter.window, (105,105,105), (x,y,w,h))
+        pygame.draw.rect(greeter.window, (47, 79,79), (x+3, y+self.scroll[1], w-6, 85)) # SCROLL BAR
+
     def LibViewer(self, fileDir, fileSearch): # MUST CALL IN A LOOP
-        for file in os.listdir(fileDir):
-            self.fileList = file
-        pygame.draw.rect(greeter.window, (47,79,79), (60,60,greeter.Width-120,greeter.Height-120)) # DRAW BACK DROP
-        pygame.draw.rect(greeter.window, (169,169,169), (62,88,greeter.Width-124,greeter.Height-150)) # EXPLOERER PANE
-        pygame.draw.rect(greeter.window, (169,169,169), (greeter.Width-86,62,24,24)) # EXIT BUTTON
-        # DRAW CROSS ON EXIT BUTTON
-        pygame.draw.line(greeter.window, (0,0,0), (greeter.Width-86,62), (greeter.Width-64,82), 2)
+        if self.viewLib:
+            for file in os.listdir(fileDir):
+                self.fileList = file
+            pygame.draw.rect(greeter.window, (47,79,79), (60,60,greeter.Width-120,greeter.Height-120)) # DRAW BACK DROP
+            pygame.draw.rect(greeter.window, (169,169,169), (62,88,greeter.Width-124,greeter.Height-150)) # EXPLOERER PANE
+            pygame.draw.rect(greeter.window, (169,169,169), (greeter.Width-86,62,24,24)) # EXIT BUTTON
+            # DRAW CROSS ON EXIT BUTTON
+            pygame.draw.line(greeter.window, (0,0,0), (greeter.Width-86,62), (greeter.Width-64,82), 2)
+            pygame.draw.line(greeter.window, (0,0,0), (greeter.Width-62,62), (greeter.Width-86,82), 2)
+            # DRAW SCROLL BAR
+            self.scrollBar(greeter.Width-78, 90, 15, greeter.Height-153)
+
+            mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
+            if greeter.Width-62 > mouse[0] > greeter.Width-86 and 86 > mouse[1] > 62:
+                if click[0] == 1:
+                    self.viewLib = False
+            
+            for file in self.fileList:
+                if fileSearch not in self.fileList:
+                    self.fileList.remove(file)
+                print(file)
+
+            for file in range(len(self.fileList)):
+                greeter.window.blit(self.png, (65+(98*file), 90+self.scroll[1]))
 
 
 
@@ -107,6 +132,7 @@ class mapEditor(object):
         pygame.draw.line(greeter.window, (47,79,79), (76,0), (76,52), 2)
         if gui.imageBtn(80,1, self.addBtn, 'addBtn'):
             self.imgBtnClick['addBtn'] = True
+            gui.viewLib = True
         gui.imageBtn(140, 1, self.removeBtn, 'removeBtn')
 
     def editor(self):
@@ -118,6 +144,13 @@ class mapEditor(object):
                 if event.type == pygame.VIDEORESIZE:
                     greeter.Width, greeter.Height = event.w, event.h
                     greeter.window = pygame.display.set_mode((greeter.Width, greeter.Height), pygame.RESIZABLE)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 4:
+                        if gui.scroll[1] > 0:
+                            gui.scroll[1] -= 25
+                    elif event.button == 5:
+                        if gui.scroll[1] < greeter.Height-263:
+                            gui.scroll[1] += 25
             greeter.window.fill((0,0,255))
 
             self.draw()
