@@ -1,5 +1,7 @@
 import pygame, os
 
+pygame.init()
+
 class Greeter(object):
     Width, Height = 1024, 768
     window = pygame.display.set_mode((Width,Height), pygame.RESIZABLE)
@@ -39,7 +41,6 @@ class World(object):
 
     def load_texture(self):
         for file in os.listdir(self.BASE_DIR + '/Resources/Maps/'):
-            print(file)
             if '.png' in file:
                 loaded_texture = pygame.image.load(self.BASE_DIR + '/Resources/Maps/%s' % (file))
                 loaded_texture = pygame.transform.scale(loaded_texture, (greeter.Width//4,greeter.Height//4))
@@ -50,7 +51,7 @@ class World(object):
             greeter.window.blit(self.Textures[texture], (self.TextureData[texture]))
 
     def scale_texture(self, texture):
-        width,height = texture.get_size()
+        #width,height = texture.get_size()
         pygame.transform.scale(texture, (int(greeter.Width/4),int(greeter.Height/4)))
         return texture
 
@@ -71,6 +72,13 @@ class GUI(object):
         self.scroll = [0,0]
         self.png = pygame.image.load(world.BASE_DIR + "/Resources/Icons/pictureIco.png")
         self.png = pygame.transform.scale(self.png, (86,82))
+
+    def text(self, fc, msg, size, font, x, y, surf):
+        font = pygame.font.SysFont(font, size)
+        text = font.render(msg, True, fc)
+        textRect = text.get_rect()
+        textRect.center = (x,y)
+        surf.blit(text, textRect)
 
     def imageBtn(self, x, y, image, action):
         mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
@@ -102,14 +110,17 @@ class GUI(object):
             if greeter.Width-62 > mouse[0] > greeter.Width-86 and 86 > mouse[1] > 62:
                 if click[0] == 1:
                     self.viewLib = False
-            
+
             for file in self.fileList:
-                if fileSearch not in self.fileList:
-                    self.fileList.remove(file)
-                print(file)
+                if file[-1] == 'g' and file[-2] == 'n' and file[-3] == 'p' and file[-4] == '.':
+                    print('found a png file')
 
             for file in range(len(self.fileList)):
-                greeter.window.blit(self.png, (65+(98*file), 90+self.scroll[1]))
+                if file == 0:
+                    greeter.window.blit(self.png, (65,90+self.scroll[1]))
+                    self.text((0,0,0), self.fileList[file], 16, 'Arial', 74, 172+self.scroll[1], greeter.window)
+                else:
+                    greeter.window.blit(self.png, (65+(98*file), 90+self.scroll[1]))
 
 
 
@@ -123,6 +134,7 @@ class mapEditor(object):
         self.addBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/add.png')
         self.removeBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/remove.png')
         self.imgBtnClick = {'saveBtn': False, 'loadBtn': False, 'addBtn': False, 'removeBtn': False}
+
 
     def draw(self):
         pygame.draw.rect(greeter.window, (211,211,211), (0,0,greeter.Width,52))
