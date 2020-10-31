@@ -170,6 +170,7 @@ class mapEditor(object):
             if self.imgBtnClick['addBtn']:
                 gui.LibViewer(self.BASE_DIR + '/Resources/Maps/', 'png')
 
+
             pygame.display.flip()
 
 
