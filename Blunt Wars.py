@@ -300,6 +300,7 @@ class mapEditor(object):
                 self.TexturePos[self.selectedObj] = mouse
 
 
+
             pygame.display.flip()
 
 
