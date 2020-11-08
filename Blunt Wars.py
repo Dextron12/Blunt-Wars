@@ -148,7 +148,7 @@ class WeaponEditor(object):
             try:
                 weaponObjName = weaponObj.strip(".png")
                 weaponObj = pygame.image.load(self.BASE_DIR + "//Reources//Objects//Weapons//Defence//%s.png" % (weaponObjName))
-                self.Weapons(weaponObjName) = [weaponObj, 'offence', None, None, None]
+                self.Weapons[weaponObjName] = [weaponObj, 'offence', None, None, None]
             except:
                 print("%s isn't a PNG file. Ignoring!" % (weaponObj))
         if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapons//Defence//defense.dat"):
@@ -163,7 +163,7 @@ class WeaponEditor(object):
         if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapons//Offence//offence.dat"):
             with open(self.BASE_DIR + "//Resources//Objects//Weapons//Offence//offence.dat", 'r') as f:
                 data = f.read()
-                        data = data.split("\n")
+                data = data.split("\n")
             for weaponObj in data:
                 weaponName = weaponObj.split("=")[0]
                 weaponData = weaponObj.split("=")[1]
