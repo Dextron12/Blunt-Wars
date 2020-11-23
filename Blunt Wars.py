@@ -183,7 +183,8 @@ class WeaponEditor(object):
         window.blit(menu, (10,10))
 
         menuPos = {}
-        print(self.countryWeapons)
+        
+        
 
 
         # DISPLAY ALL WEPAONS SELECTED BYT THE COUNTRY
