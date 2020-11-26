@@ -148,7 +148,7 @@ class WeaponEditor(object):
             try:
                 weaponObjName = weaponObj.split(".png")[0]
                 weaponObj = pygame.image.load(self.BASE_DIR + "//Resources//Objects//Weapon//Offence//%s.png" % (weaponObjName))
-                self.Weapons[weaponObjName] = [weaponObj, 'offence', None, None, None]
+                weaponObj = pygame.transform.scale(weaponObj, (38,32))
             except:
                 print("%s isn't a PNG file. Ignoring!" % (weaponObj))
         if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapos//Defence//defence.dat"):
@@ -180,19 +180,18 @@ class WeaponEditor(object):
         gui.text((47, 79, 79), "Available Weapons", 18, "Arial", (greeter.Width//2)+60, 10, menu)
         gui.text((47, 79, 79), "Added Weapons", 18, "Arial", 60, 10, menu)
         pygame.draw.line(menu, (0,0,0), (0,50), (greeter.Width-20,50), 2)
-        window.blit(menu, (10,10))
-
-        menuPos = {}
-        print(self.countryWeapons)
+        
 
 
         # DISPLAY ALL WEPAONS SELECTED BYT THE COUNTRY
-        for weapon in range(len(self.countryWeapons)):
-            menuPos[self.countryWeapons[weapon]] = (32+(10*weapon, 210)) # SETS POSITION OF WEAPON TILES FOR SELECTING PURPOSES | CREATE Y VALUE FORMULA THAT MOVES DOWN EVERY SAY 15 TILED WEAPONS
+        #for weapon in range(len(self.countryWeapons)):
+            #menuPos[self.countryWeapons[weapon]] = (32+(10*weapon, 210)) # SETS POSITION OF WEAPON TILES FOR SELECTING PURPOSES | CREATE Y VALUE FORMULA THAT MOVES DOWN EVERY SAY 15 TILED WEAPONS
 
-        for weapon in menuPos:
-            print(menuPos[weapon])
-            menu.blit(self.Weapons[weapon][0], (menuPos[weapon])) 
+        for weapon in range(len(self.Weapons)):
+            print(32+(19*weapon))
+            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], (32+(19*weapon), 210))
+
+        window.blit(menu, (10,10))
 
 class mapEditor(object):
 
@@ -260,6 +259,7 @@ class mapEditor(object):
 
 
     def editor(self):
+        mapX, mapY = 0,0
         while self.edit:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -307,6 +307,18 @@ class mapEditor(object):
 
             if self.imgBtnClick['weaponBtn'] == True:
                 weapon_editor.weaponEditorGUI(greeter.window, self.selectedObj)
+
+            # GET KEY PRESSES AND MOVE MAP AROUND
+            key = pygame.key.get_pressed()
+            for mapObj in self.TexturePos:
+                if key[pygame.K_w] or key[pygame.K_UP]:
+                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0], self.TexturePos[mapObj][1] - greeter.Height//116
+                elif key[pygame.K_s] or key[pygame.K_DOWN]:
+                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0], self.TexturePos[mapObj][1] + 15
+                elif key[pygame.K_a] or key[pygame.K_LEFT]:
+                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0] - 15, self.TexturePos[mapObj][1]
+                elif key[pygame.K_d] or key[pygame.K_RIGHT]:
+                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0] + 15, self.TexturePos[mapObj][1]  
 
 
 
