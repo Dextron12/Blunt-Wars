@@ -148,7 +148,7 @@ class WeaponEditor(object):
             try:
                 weaponObjName = weaponObj.split(".png")[0]
                 weaponObj = pygame.image.load(self.BASE_DIR + "//Resources//Objects//Weapon//Offence//%s.png" % (weaponObjName))
-                weaponObj = pygame.transform.scale(weaponObj, (38,32))
+                self.Weapons[weaponObjName] = [weaponObj, 'offence', None, None, None]
             except:
                 print("%s isn't a PNG file. Ignoring!" % (weaponObj))
         if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapos//Defence//defence.dat"):
@@ -180,12 +180,6 @@ class WeaponEditor(object):
         gui.text((47, 79, 79), "Available Weapons", 18, "Arial", (greeter.Width//2)+60, 10, menu)
         gui.text((47, 79, 79), "Added Weapons", 18, "Arial", 60, 10, menu)
         pygame.draw.line(menu, (0,0,0), (0,50), (greeter.Width-20,50), 2)
-        
-
-
-        # DISPLAY ALL WEPAONS SELECTED BYT THE COUNTRY
-        #for weapon in range(len(self.countryWeapons)):
-            #menuPos[self.countryWeapons[weapon]] = (32+(10*weapon, 210)) # SETS POSITION OF WEAPON TILES FOR SELECTING PURPOSES | CREATE Y VALUE FORMULA THAT MOVES DOWN EVERY SAY 15 TILED WEAPONS
 
         for weapon in range(len(self.Weapons)):
             print(32+(19*weapon))
