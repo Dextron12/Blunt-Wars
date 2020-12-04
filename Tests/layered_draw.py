@@ -41,16 +41,25 @@ while True:
     # X FORMULA
     TotalRow = int((width//32)*0.65) # SUCCESS
     # Y FORMULA
-    column = int((height//32)*0.65)
+    TotalColumn = int((height//32)*0.65)
+    biggerRow = 0
 
-    row = TotalRow-(column//len(objList))-(0.55*TotalRow))
+    """row = TotalRow-(TotalColumn//len(objList))-(0.55*TotalRow)
+    column = TotalColumn-(TotalRow//len(objList)-(0.55*TotalColumn))
 
-    while row != TotalRow:
-        row += 1
+    for x in range(int(row)):
+        for y in range(int(14)):
+            pygame.draw.rect(window, (255,0,0), (16+(48*x), 16+(48*y), 32, 32))"""
 
-    for x in range(9):
-        for y in range(8):
-            pygame.draw.rect(window, (255,0,0), (16+(48*x), 16+(48*y), 32, 32))
+    for num in range(9):
+        if len(objList) // num
+
+    for x in range(18):
+        for y in range(4):
+            pygame.draw.rect(window, (0,255,0), (16+(48*x), 16+(48*y), 32, 32))
+    
+
+    
 
 
     pygame.display.flip()

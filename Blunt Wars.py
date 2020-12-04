@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, pynput
 from ast import literal_eval
 
 pygame.init()
@@ -73,6 +73,8 @@ class GUI(object):
         self.scroll = [0,0]
         self.png = pygame.image.load(world.BASE_DIR + "/Resources/Icons/pictureIco.png")
         self.png = pygame.transform.scale(self.png, (86,82))
+        self.popWindow = pygame.Surface(0,0)
+        self.loggedKeys = []
 
     def text(self, fc, msg, size, font, x, y, surf):
         font = pygame.font.SysFont(font, size)
@@ -93,6 +95,26 @@ class GUI(object):
     def scrollBar(self, x, y, w, h):
         pygame.draw.rect(greeter.window, (105,105,105), (x,y,w,h))
         pygame.draw.rect(greeter.window, (47, 79,79), (x+3, y+self.scroll[1], w-6, 85)) # SCROLL BAR
+
+    def key_callback(key):
+        self.loggedKeys.append(key)
+
+    def popForm(x, y, w, h, bg, fg, feilds, boxWidth, boxheight, border=False, borderColour=None, transparent=False, multiFeild=False): # feilds MUST BE A LIST
+        if transparent:
+            self.popWindow.set_alpha(120)
+        pygame.transform.scale(self.popWindow, (w,h))
+        self.popWindow.fill(bg)
+       if border:
+           pygame.draw.rect(self.popWindow, bg, (x+5,y+5,w-10,h-10), 3)
+        if multiFeild == False:
+            pygame.draw.rect(self.popWindow, fg, (x+(boxWidth//2), y+(boxheight//2), boxWidth, boxheight))
+            mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
+            if (x+(boxWidth//2))+boxWidth > mouse[0] > x+(boxWidth//2) and (y+(boxheight//2)+boxheight > mouse[1] > y+(boxheight//2)):
+
+
+
+
+
 
     def LibViewer(self, fileDir, fileSearch): # MUST CALL IN A LOOP
         if self.viewLib:
@@ -181,9 +203,12 @@ class WeaponEditor(object):
         gui.text((47, 79, 79), "Added Weapons", 18, "Arial", 60, 10, menu)
         pygame.draw.line(menu, (0,0,0), (0,50), (greeter.Width-20,50), 2)
 
+        print(self.Weapons)
+
         for weapon in range(len(self.Weapons)):
-            print(32+(19*weapon))
-            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], (32+(19*weapon), 210))
+            #print(weapon)
+            #print(32+(19*weapon))
+            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], ((32+weapon)*19, (greeter.Height//64)+20))
 
         window.blit(menu, (10,10))
 
