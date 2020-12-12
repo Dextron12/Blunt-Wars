@@ -1,7 +1,9 @@
-import pygame, os, pynput
+import pygame, os
 from ast import literal_eval
 
 pygame.init()
+
+keyEvents = []
 
 class Greeter(object):
     Width, Height = 1024, 768
@@ -73,7 +75,7 @@ class GUI(object):
         self.scroll = [0,0]
         self.png = pygame.image.load(world.BASE_DIR + "/Resources/Icons/pictureIco.png")
         self.png = pygame.transform.scale(self.png, (86,82))
-        self.popWindow = pygame.Surface(0,0)
+        #self.popWindow = pygame.Surface(0,0)
         self.loggedKeys = []
 
     def text(self, fc, msg, size, font, x, y, surf):
@@ -99,17 +101,17 @@ class GUI(object):
     def key_callback(key):
         self.loggedKeys.append(key)
 
-    def popForm(x, y, w, h, bg, fg, feilds, boxWidth, boxheight, border=False, borderColour=None, transparent=False, multiFeild=False): # feilds MUST BE A LIST
+    """def popForm(x, y, w, h, bg, fg, feilds, boxWidth, boxheight, border=False, borderColour=None, transparent=False, multiFeild=False): # feilds MUST BE A LIST
         if transparent:
             self.popWindow.set_alpha(120)
-        pygame.transform.scale(self.popWindow, (w,h))
+            pygame.transform.scale(self.popWindow, (w,h))
         self.popWindow.fill(bg)
-       if border:
-           pygame.draw.rect(self.popWindow, bg, (x+5,y+5,w-10,h-10), 3)
+        if border:
+            pygame.draw.rect(self.popWindow, bg, (x+5,y+5,w-10,h-10), 3)
         if multiFeild == False:
             pygame.draw.rect(self.popWindow, fg, (x+(boxWidth//2), y+(boxheight//2), boxWidth, boxheight))
-            mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
-            if (x+(boxWidth//2))+boxWidth > mouse[0] > x+(boxWidth//2) and (y+(boxheight//2)+boxheight > mouse[1] > y+(boxheight//2)):
+        mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
+        if (x+(boxWidth//2))+boxWidth > mouse[0] > x+(boxWidth//2) and (y+(boxheight//2)+boxheight > mouse[1] > y+(boxheight//2)):"""
 
 
 
@@ -155,6 +157,8 @@ class WeaponEditor(object):
         self.BASE_DIR = os.path.dirname(os.path.realpath(__file__))
         self.Weapons = {}
         self.countryWeapons = {} # country: [weapons]
+        self.editWeapon = False
+        self.activeForm = None
 
         #name = [weaponObject, weaponType, usage, xp, definition]
 
@@ -199,18 +203,39 @@ class WeaponEditor(object):
         menu.fill((245, 255, 240))
         pygame.draw.rect(menu, (0,0,0), (0,0,greeter.Width-20,greeter.Height-20), 2)
         pygame.draw.line(menu, (0,0,0), ((greeter.Width-20)//2, 0), ((greeter.Width-20)/2,greeter.Height-20))
-        gui.text((47, 79, 79), "Available Weapons", 18, "Arial", (greeter.Width//2)+60, 10, menu)
-        gui.text((47, 79, 79), "Added Weapons", 18, "Arial", 60, 10, menu)
+        gui.text((47, 79, 79), "Added Weapons", 18, "Arial", (greeter.Width//2)+90, 10, menu)
+        gui.text((47, 79, 79), "Available Weapons", 18, "Arial", 90, 10, menu)
         pygame.draw.line(menu, (0,0,0), (0,50), (greeter.Width-20,50), 2)
 
-        print(self.Weapons)
+        mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
 
         for weapon in range(len(self.Weapons)):
             #print(weapon)
             #print(32+(19*weapon))
-            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], ((32+weapon)*19, (greeter.Height//64)+20))
+            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], (4+(weapon*32)+(weapon*10), (greeter.Height//64)+20))
+
+            if (4+(weapon*32)+(weapon*10))+64 > mouse[0] > 4+(weapon*32)+(weapon*10) and ((greeter.Height//64)+20)+64 > mouse[1] > (greeter.Height//64)+20: # !!!!WARNING!!! ~ get weapon obj w,h for w,h caculation or two wepaons overlap each other after the first instance. Could cause user to select two weapons at ther same time
+                if self.Weapons.get(list(self.Weapons)[weapon])[2] == None or self.Weapons.get(list(self.Weapons)[weapon])[3] == None or self.Weapons.get(list(self.Weapons)[weapon])[4] == None:
+                    if click[0] == 1:
+                        self.editWeapon = True
 
         window.blit(menu, (10,10))
+
+        if self.editWeapon == True:
+            self.weaponForm(window, selectedObj, list(self.Weapons)[weapon], [None])
+
+    def weaponForm(self, window, selectedObj, weaponName, formList):
+        #formList[0] = first form
+        # formList[1] = second form
+        # formList[2] = thrid form
+        # formList = [['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b', 'c']] 
+        pygame.draw.rect(window, (0,255,0), (200,100,greeter.Width-400,greeter.Height-200))
+        window.blit(self.Weapons.get(weaponName)[0], (greeter.Width//2, 104))
+        # special keys '\x1b', '\r', ''
+        #if keyEvents[-1] != '\x1b' or keyEvents[-1] != '\r' or keyEvents[-1] != '':
+            #formList.append(keyEvents[-1])
+        
+
 
 class mapEditor(object):
 
@@ -266,11 +291,11 @@ class mapEditor(object):
 
 
         if self.selectedObj != None:
-            if self.TexturePos[self.selectedObj][0]+self.loadedTextures[self.selectedObj].get_size()[0] < pygame.mouse.get_pos()[0] < self.TexturePos[self.selectedObj][0] and self.TexturePos[self.selectedObj][1]+self.loadedTextures[self.selectedObj].get_size()[1] < pygame.mouse.get_pos()[1] < self.TexturePos[self.selectedObj]:
+            """if self.TexturePos[self.selectedObj][0]+self.loadedTextures[self.selectedObj].get_size()[0] < pygame.mouse.get_pos()[0] < self.TexturePos[self.selectedObj][0] and self.TexturePos[self.selectedObj][1]+self.loadedTextures[self.selectedObj].get_size()[1] < pygame.mouse.get_pos()[1] < self.TexturePos[self.selectedObj]:
                 # USER'S MOUSE IS OUTSIDE OF SELECTED OBJECT
                 print("outside of selected obj")
                 if pygame.mouse.get_presssed()[0] == 1:
-                    self.selectedObj = None
+                    self.selectedObj = None # DOESNT WORK!!!!"""
 
             textureX, textureY = self.TexturePos[self.selectedObj][0], self.TexturePos[self.selectedObj][1]
             textureW, textureH = self.loadedTextures[self.selectedObj].get_size()[0], self.loadedTextures[self.selectedObj].get_size()[1]
@@ -278,7 +303,6 @@ class mapEditor(object):
 
 
     def editor(self):
-        mapX, mapY = 0,0
         while self.edit:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -300,8 +324,13 @@ class mapEditor(object):
                         self.imgBtnClick['moveBtn'] = None
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
-                        if self.imgBtnClick['weaponBtn']:
+                        if self.imgBtnClick['weaponBtn'] and weapon_editor.editWeapon == False:
                             self.imgBtnClick['weaponBtn'] = False
+                        elif weapon_editor.editWeapon == True:
+                            weapon_editor.editWeapon = False
+                        elif self.imgBtnClick['addBtn']:
+                            self.imgBtnClick['addBtn'] = False
+                    keyEvents.append(event.unicode)
             greeter.window.fill((0,0,255))
 
             self.draw()
@@ -310,7 +339,9 @@ class mapEditor(object):
                 if self.imgBtnClick['addBtn']:
                     #gui.LibViewer(self.BASE_DIR + '/Resources/Maps/', 'png')
                     # ALPHA PURPOSES ONLY!!!
-                    fileName = input("File to load in Map Dir: ")
+                    #fileName = input("File to load in Map Dir: ")
+                    fileName = 'abc'
+                    self.drawLoader()
                     try:
                         texture = pygame.image.load(self.BASE_DIR + '/Resources/Maps/%s.png' % (fileName))
                         self.loadedTextures[fileName] = texture
@@ -342,6 +373,11 @@ class mapEditor(object):
 
 
             pygame.display.flip()
+
+    def drawLoader(self):
+        pygame.draw.rect(greeter.window, (0,139,139), (40, 20, greeter.Width-80, greeter.Height-40)) # Background
+        pygame.draw.rect(greeter.window, (255,255,255), (60, ))
+
 
 
                 
