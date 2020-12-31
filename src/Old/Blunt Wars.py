@@ -376,7 +376,7 @@ class mapEditor(object):
 
     def drawLoader(self):
         pygame.draw.rect(greeter.window, (0,139,139), (40, 20, greeter.Width-80, greeter.Height-40)) # Background
-        pygame.draw.rect(greeter.window, (255,255,255), (60, ))
+        #pygame.draw.rect(greeter.window, (255,255,255), (60, ))
 
 
 

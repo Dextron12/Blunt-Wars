@@ -51,8 +51,8 @@ while True:
         for y in range(int(14)):
             pygame.draw.rect(window, (255,0,0), (16+(48*x), 16+(48*y), 32, 32))"""
 
-    for num in range(9):
-        if len(objList) // num
+    #for num in range(9):
+    #    if len(objList) // num
 
     for x in range(18):
         for y in range(4):

@@ -1,390 +1,256 @@
 import pygame, os
+
+from Scripts import PygUI as ui
 from ast import literal_eval
 
-pygame.init()
+BASE_DIR = os.getcwd()
+BASE_DIR = BASE_DIR + '\\'
 
-keyEvents = []
+handler = ui.EventHandler(1024, 648)
 
-class Greeter(object):
-    Width, Height = 1024, 768
-    window = pygame.display.set_mode((Width,Height), pygame.RESIZABLE)
-    pygame.display.set_caption("Blunt Wars")
-
-
-    def game_loop(self):
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                if event.type == pygame.VIDEORESIZE:
-                    self.Width, self.Height = event.w, event.h
-                    #print(event.w, event.h)
-                    #print(self.Width)
-                    world.update_map()
-                    self.window = pygame.display.set_mode((self.Width, self.Height), pygame.RESIZABLE)
-            
-            self.window.fill((0,0,255))
-
-            world.draw_map()
-
-            pygame.display.flip()
-
-greeter = Greeter()
-
-# OBJECT CLASSES
-
-class World(object):
+class Weapons:
 
     def __init__(self):
-        self.Textures, self.TextureData = {}, {}
-        self.BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-        self.load_texture()
-        self.update_map()
+        self.weaponObj = {} # NAME: SURFACE
+        self.offensive = {} # NAME: [DAMAGE, USAGE, IMMUNITY] | IMMUNITY IS EITHER None or [CountryNmae, CountryName]
+        self.defensive = {} # NAME: [Protection, Usage, defenceStat, IndustryStat] # Protection: how much protection thsi provides you | defenceStat how much more defence you have. More defence means less damage and less attacks
+        # IndustryStat: A Statistic of how well a countries industry is performing. Can make country a super power
 
-    def load_texture(self):
-        for file in os.listdir(self.BASE_DIR + '/Resources/Maps/'):
+    def load_all(self, dir): # function to load all weapon images for generic game modes use loadMap_weapons function to load weapons for individual maps
+        for file in os.listdir(dir):
             if '.png' in file:
-                loaded_texture = pygame.image.load(self.BASE_DIR + '/Resources/Maps/%s' % (file))
-                loaded_texture = pygame.transform.scale(loaded_texture, (16,16))
-                self.Textures[file.strip('.png')] = loaded_texture
-
-    def draw_map(self):
-        for texture in self.Textures:
-            greeter.window.blit(self.Textures[texture], (self.TextureData[texture]))
-
-    """def scale_texture(self, texture):
-        #width,height = texture.get_size()
-        pygame.transform.scale(texture, (int(greeter.Width/4),int(greeter.Height/4)))
-        return texture"""
-
-    def update_map(self):
-        for texture in self.Textures:
-            width,height = self.Textures[texture].get_size()
-            # SET OFFSET FOR EACH MAP FROM SCALING COORDS 
-            if texture == 'Australia':
-                self.TextureData[texture] = ((greeter.Width-width), greeter.Height-height)
-            else:
-                self.TextureData[texture] = (0,0)
-
-class GUI(object):
-
-    def __init__(self):
-        self.fileList = []
-        self.viewLib = False
-        self.scroll = [0,0]
-        self.png = pygame.image.load(world.BASE_DIR + "/Resources/Icons/pictureIco.png")
-        self.png = pygame.transform.scale(self.png, (86,82))
-        #self.popWindow = pygame.Surface(0,0)
-        self.loggedKeys = []
-
-    def text(self, fc, msg, size, font, x, y, surf):
-        font = pygame.font.SysFont(font, size)
-        text = font.render(msg, True, fc)
-        textRect = text.get_rect()
-        textRect.center = (x,y)
-        surf.blit(text, textRect)
-
-    def imageBtn(self, x, y, image, action):
-        mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
-        w,h = image.get_size()
-        if x+w > mouse[0] > x and y+h > mouse[1] > y:
-            if click[0] == 1:
-                #editor.imageBtnClick[action] = True # IN FUNCTION EVENT DO FUNCTION THEN CLOSE true STATEMENT AFTER FUNCTION
-                return True
-        greeter.window.blit(image, (x,y))
-
-    def scrollBar(self, x, y, w, h):
-        pygame.draw.rect(greeter.window, (105,105,105), (x,y,w,h))
-        pygame.draw.rect(greeter.window, (47, 79,79), (x+3, y+self.scroll[1], w-6, 85)) # SCROLL BAR
-
-    def key_callback(key):
-        self.loggedKeys.append(key)
-
-    """def popForm(x, y, w, h, bg, fg, feilds, boxWidth, boxheight, border=False, borderColour=None, transparent=False, multiFeild=False): # feilds MUST BE A LIST
-        if transparent:
-            self.popWindow.set_alpha(120)
-            pygame.transform.scale(self.popWindow, (w,h))
-        self.popWindow.fill(bg)
-        if border:
-            pygame.draw.rect(self.popWindow, bg, (x+5,y+5,w-10,h-10), 3)
-        if multiFeild == False:
-            pygame.draw.rect(self.popWindow, fg, (x+(boxWidth//2), y+(boxheight//2), boxWidth, boxheight))
-        mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
-        if (x+(boxWidth//2))+boxWidth > mouse[0] > x+(boxWidth//2) and (y+(boxheight//2)+boxheight > mouse[1] > y+(boxheight//2)):"""
-
-
-
-
-
-
-    def LibViewer(self, fileDir, fileSearch): # MUST CALL IN A LOOP
-        if self.viewLib:
-            searchDir = []
-            searchDir = os.listdir()
-            for selectedFile in searchDir:
-                if selectedFile not in self.fileList:
-                    self.fileList.append(selectedFile)
-            pygame.draw.rect(greeter.window, (47,79,79), (60,60,greeter.Width-120,greeter.Height-120)) # DRAW BACK DROP
-            pygame.draw.rect(greeter.window, (169,169,169), (62,88,greeter.Width-124,greeter.Height-150)) # EXPLOERER PANE
-            pygame.draw.rect(greeter.window, (169,169,169), (greeter.Width-86,62,24,24)) # EXIT BUTTON
-            # DRAW CROSS ON EXIT BUTTON
-            pygame.draw.line(greeter.window, (0,0,0), (greeter.Width-86,62), (greeter.Width-64,82), 2)
-            pygame.draw.line(greeter.window, (0,0,0), (greeter.Width-62,62), (greeter.Width-86,82), 2)
-            # DRAW SCROLL BAR
-            self.scrollBar(greeter.Width-78, 90, 15, greeter.Height-153)
-
-            mouse,click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
-            if greeter.Width-62 > mouse[0] > greeter.Width-86 and 86 > mouse[1] > 62:
-                if click[0] == 1:
-                    self.viewLib = False
-
-
-            for file in range(len(self.fileList)):
-                if self.fileList[file][-4:] ==  ".png":
-                    print(self.fileList, file)
-                    self.fileList[file] = self.fileList[file].strip('.png')
-                if file == 0:
-                    greeter.window.blit(self.png, (65,90+self.scroll[1]))
-                    self.text((0,0,0), self.fileList[file], 16, 'Arial', 74, 172+self.scroll[1], greeter.window)
-                    print(self.fileList[file])
-                else:
-                    greeter.window.blit(self.png, (65+(98*file), 90+self.scroll[1]))
-
-class WeaponEditor(object):
-
-    def __init__(self):
-        self.BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-        self.Weapons = {}
-        self.countryWeapons = {} # country: [weapons]
-        self.editWeapon = False
-        self.activeForm = None
-
-        #name = [weaponObject, weaponType, usage, xp, definition]
-
-        # LOAD DEFENSE AND OFFENCE WEAPONS THEN LABEL AND SORT THEM
-        for weaponObj in os.listdir(self.BASE_DIR + "//Resources//Objects//Weapon//Defence//"):
-            try:
-                weaponObjName = weaponObj.split(".png")[0]
-                weaponObj = pygame.image.load(self.BASE_DIR + "//Resources//Objects//Weapon//Defence//%s.png" % (weaponObjName))
-                self.Weapons[weaponObjName] = [weaponObj, 'defence', None, None, None]
-            except:
-                print("%s isn't a PNG file. Ignoring!" % (weaponObj))
-        for weaponObj in os.listdir(self.BASE_DIR + "//Resources//Objects//Weapon//Offence//"):
-            try:
-                weaponObjName = weaponObj.split(".png")[0]
-                weaponObj = pygame.image.load(self.BASE_DIR + "//Resources//Objects//Weapon//Offence//%s.png" % (weaponObjName))
-                self.Weapons[weaponObjName] = [weaponObj, 'offence', None, None, None]
-            except:
-                print("%s isn't a PNG file. Ignoring!" % (weaponObj))
-        if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapos//Defence//defence.dat"):
-            with open(self.BASE_DIR + "//Resources//Objects//Weapon//Defence//defence.dat", 'r') as f:
+                #load the image
+                self.weaponObj[file.split('.png')[0]] = pygame.image.load(dir + '\\%s' % (file)) 
+                # IF IMAGE REQUIRES SCALING DO NOT SCALE THE IMAGE DIRECTLY
+                print("Loaded %s as a weapon" % (file))
+        if 'Defensive.weaponExtension' not in os.listdir(dir) or "Offensive.weaponExtension" not in os.listdir(dir):
+            # CREATE EMPTY FILES FOR EDITOR TO FILL
+            with open(dir + '\\Offensive.weaponExtension', 'w') as f:
+                f.write(' ')
+            with open(dir + '\\Defensive.weaponExtension', 'w') as f:
+                f.write(' ')
+        else:
+            with open(dir + '\\Offensive.weaponExtension', 'r') as f:
                 data = f.read()
-                # FILE STRUCTURE
-                # name = [usage, xp, definition]
-                # name = [usage, xp, definition]
-                # name = [usage, xp, definition]
-                # etc...
-
-        if os.path.isfile(self.BASE_DIR + "//Resources//Objects//Weapons//Offence//offence.dat"):
-            with open(self.BASE_DIR + "//Resources//Objects//Weapons//Offence//offence.dat", 'r') as f:
+            data = data.split('\n')
+            for obj in data:
+                print(data) 
+            with open(dir + '\\Defensive.weaponExtension', 'r') as f:
                 data = f.read()
-                data = data.split("\n")
-            for weaponObj in data:
-                weaponName = weaponObj.split("=")[0]
-                weaponData = weaponObj.split("=")[1]
-                weaponData = literal_eval(weaponData)
-                self.Weapons[weaponName][2] = weaponData[0]
-                self.Weapons[weaponName][3] = weaponData[1]
-                self.Weapons[weaponName][4] = weaponData[2]
+            data = data.split('\n')
+            for obj in data:
+                print(obj)
 
-    def weaponEditorGUI(self, window, selectedObj):
-        menu = pygame.Surface((greeter.Width-20, greeter.Height-20), pygame.SRCALPHA, 32)
-        menu.fill((245, 255, 240))
-        pygame.draw.rect(menu, (0,0,0), (0,0,greeter.Width-20,greeter.Height-20), 2)
-        pygame.draw.line(menu, (0,0,0), ((greeter.Width-20)//2, 0), ((greeter.Width-20)/2,greeter.Height-20))
-        gui.text((47, 79, 79), "Added Weapons", 18, "Arial", (greeter.Width//2)+90, 10, menu)
-        gui.text((47, 79, 79), "Available Weapons", 18, "Arial", 90, 10, menu)
-        pygame.draw.line(menu, (0,0,0), (0,50), (greeter.Width-20,50), 2)
+    def loadMap_weapons(self, mapName):
+        print("I am not complete")
 
-        mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
+weapons = Weapons()
+# use weapons.load_all() to laod generic weapons or loadMap_weapons to load map specific weapons
+                
 
-        for weapon in range(len(self.Weapons)):
-            #print(weapon)
-            #print(32+(19*weapon))
-            menu.blit(self.Weapons.get(list(self.Weapons)[weapon])[0], (4+(weapon*32)+(weapon*10), (greeter.Height//64)+20))
+class Editor:
+    
+    def __init__(self, mapX, mapY, mapW, mapH):
+        self.mapSize = [mapX, mapY, mapW, mapH]
 
-            if (4+(weapon*32)+(weapon*10))+64 > mouse[0] > 4+(weapon*32)+(weapon*10) and ((greeter.Height//64)+20)+64 > mouse[1] > (greeter.Height//64)+20: # !!!!WARNING!!! ~ get weapon obj w,h for w,h caculation or two wepaons overlap each other after the first instance. Could cause user to select two weapons at ther same time
-                if self.Weapons.get(list(self.Weapons)[weapon])[2] == None or self.Weapons.get(list(self.Weapons)[weapon])[3] == None or self.Weapons.get(list(self.Weapons)[weapon])[4] == None:
-                    if click[0] == 1:
-                        self.editWeapon = True
+        # DEFINE UI OBJECTS HERE
+        self.loadBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\load.png', 32)
+        self.saveBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\save.png', 32)
+        self.addBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\add.png', 38)
+        self.remBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\remove.png', 38)
+        self.selBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\cursor.png', 32)
+        self.movBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\move.png', 32)
+        self.wepBtn = ui.imgButton(BASE_DIR + 'src\\Resources\\Buttons\\weapons.png', 32)
 
-        window.blit(menu, (10,10))
+        pygame.time.set_timer(pygame.USEREVENT, 800)
+        self.searchFeild = ui.formPopup(handler.width//3, (handler.height//2)-80, handler.width//3, 160, "Load Map File", "Enter File name to load into map", pygame.USEREVENT, 1)
 
-        if self.editWeapon == True:
-            self.weaponForm(window, selectedObj, list(self.Weapons)[weapon], [None])
+        # Map Editor stuff
+        self.mapObjects = {} # SURFACE: (posX, posY)
+        self.selectedObj = None # SELECTED SRUFACE: (posX, posY) 
+        self.select = False
+        self.move = False
 
-    def weaponForm(self, window, selectedObj, weaponName, formList):
-        #formList[0] = first form
-        # formList[1] = second form
-        # formList[2] = thrid form
-        # formList = [['a', 'b', 'c'], ['a', 'b', 'c'], ['a', 'b', 'c']] 
-        pygame.draw.rect(window, (0,255,0), (200,100,greeter.Width-400,greeter.Height-200))
-        window.blit(self.Weapons.get(weaponName)[0], (greeter.Width//2, 104))
-        # special keys '\x1b', '\r', ''
-        #if keyEvents[-1] != '\x1b' or keyEvents[-1] != '\r' or keyEvents[-1] != '':
-            #formList.append(keyEvents[-1])
-        
+        self.updateMove = False
+
+        # WEAPON EDITOR GUI VARIABLES
+        self.weaponsGUI = pygame.Surface((self.mapSize[2]-20, self.mapSize[3]-72))
+        self.openWepEditor = False
+        self.privWeapons = [] # A list of map specific weapons can be toggled in editor
+
+        # LOAD ALL WEAPON OBJECTS
+        weapons.load_all(BASE_DIR + '\\src\\Resources\\Objects\\Weapon')
+
+    def weaponEditor(self, x, y):
+        self.weaponsGUI.fill((255,255,255))
+        sizeX, sizeY = self.weaponsGUI.get_size()[0], self.weaponsGUI.get_size()[1]
+
+        pygame.draw.rect(self.weaponsGUI, (49, 79, 79), (0,0,sizeX,30)) # window panel
+        pygame.draw.line(self.weaponsGUI, (49, 79, 79), (int(sizeX//2), 30), (int(sizeX//2), sizeY), 2)
+        pygame.draw.line(self.weaponsGUI, (49, 79, 79), (0, 65), (sizeX, 65), 2)
+
+        # DRAW TEXT
+        self.weaponsGUI.blit(ui.text.bare((240, 240, 240), 'Tahoma', 15, 'Edit Weapons For Country'), (5,8)) # TITLE
+        self.weaponsGUI.blit(ui.text.bare((49, 79, 79), 'Tahoma', 18, 'Added Weapons'), (int(sizeX//4)-42, 42))
+        self.weaponsGUI.blit(ui.text.bare((49, 79, 79), 'Tahoma', 18, "Available Weapons"), ((sizeX//2)+(int(sizeX//4)-42), 42))
 
 
-class mapEditor(object):
+        # LOGIC
+        mouse = pygame.mouse.get_pos()
+        for event in handler.event_list:
+            if event.type == pygame.VIDEORESIZE:
+                self.weaponsGUI = pygame.Surface((event.w-20, event.h-72))
 
-    def __init__(self):
-        self.edit = True
-        self.BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-        self.saveBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/save.png')
-        self.loadBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/load.png')
-        self.addBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/add.png')
-        self.removeBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/remove.png')
-        self.selectBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/cursor.png')
-        self.moveBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/move.png')
-        self.weaponBtn = pygame.image.load(self.BASE_DIR + '/Resources/Buttons/weapons.png')
-        self.imgBtnClick = {'saveBtn': False, 'loadBtn': False, 'addBtn': False, 'removeBtn': False, 'selectBtn': False, 'moveBtn': False, 'weaponBtn': False}
-        self.loadedTextures = {}
-        self.TexturePos = {}
-        self.selectedObj = None
+        if x+sizeX > mouse[0] > x+(sizeX-30) and (y+42)+30 > mouse[1] > y+42:
+            pygame.draw.rect(self.weaponsGUI, (255, 0, 0), (sizeX-30, 0, 30, 30))
+            for event in handler.event_list:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.openWepEditor = False
+
+        # DRAW EXIT BUTTON
+        pygame.draw.line(self.weaponsGUI, (0,0,0), (sizeX-28, 0), (sizeX, 28), 2)
+        pygame.draw.line(self.weaponsGUI, (0,0,0), (sizeX, 0), (sizeX-28, 28), 2)
+
+
+        handler.window.blit(self.weaponsGUI, (x, y+42))
+
 
 
     def draw(self):
-        pygame.draw.rect(greeter.window, (211,211,211), (0,0,greeter.Width,52))
-        #greeter.window.blit(self.saveBtn, (5,8))
-        gui.imageBtn(5,8, self.saveBtn, 'saveBtn')
-        gui.imageBtn(42,8, self.loadBtn, "loadBtn")
-        pygame.draw.line(greeter.window, (47,79,79), (76,0), (76,52), 2)
-        if gui.imageBtn(80,1, self.addBtn, 'addBtn'):
-            self.imgBtnClick['addBtn'] = True
-            gui.viewLib = True
-        gui.imageBtn(140, 1, self.removeBtn, 'removeBtn')
-        pygame.draw.line(greeter.window, (0,0,0), (192,0), (192,52), 2)
-        if gui.imageBtn(194, 10, self.selectBtn, 'selectBtn'):
-            self.imgBtnClick['selectBtn'] = True
-        if gui.imageBtn(228, 10, self.moveBtn, 'moveBtn'):
-            self.imgBtnClick['moveBtn'] = True
-        if gui.imageBtn(270, 10, self.weaponBtn, 'weaponBtn') and self.selectedObj != None:
-            self.imgBtnClick['weaponBtn'] = True
-            # CREATE A ERROR FUNCTION THAT SHOWS POPUP MESSAGE SAYING COUNTRY NOT SELECTED
+        while True:
+            handler.handle()
+            handler.window.fill((0,0,255))
 
-        #weapon_editor.weaponEditorGUI()
+            pygame.draw.rect(handler.window, (255,255,255), (0,0,handler.width,42)) # EDITOR MENU
 
-        # DRAW ANY LOADED TEXTURE POSITIONS TO MAP
-        for texture in self.TexturePos:
-            greeter.window.blit(self.loadedTextures[texture], (self.TexturePos[texture]))
+            self.loadBtn.draw(handler.window, 2,2, handler)
+            self.saveBtn.draw(handler.window, 34, 2, handler)
+            pygame.draw.line(handler.window, (47, 79, 79), (68,0), (68,41), 2)
 
-            # CHECK IF USER HAS SELECTED TEXTURE WHEN SELECTING TOOL ACTIVE
-            if self.imgBtnClick['selectBtn'] == True and not self.imgBtnClick['weaponBtn']:
-                mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
-                cWidth, cHeight = self.loadedTextures[texture].get_size()
-                
-                if self.TexturePos[texture][0]+cWidth > mouse[0] > self.TexturePos[texture][0] and self.TexturePos[texture][1]+cHeight > mouse[1] > self.TexturePos[texture][1]:
-                    if click[0] == 1:
-                        self.selectedObj = texture
+            self.addBtn.draw(handler.window, 70, 2, handler)
+            self.remBtn.draw(handler.window, 108, 2, handler)
+            pygame.draw.line(handler.window, (47, 79, 79), (150,0), (150,41), 2)
 
+            self.selBtn.draw(handler.window, 152, 2, handler)
+            self.movBtn.draw(handler.window, 186, 2, handler)
+            self.wepBtn.draw(handler.window, 220, 2, handler)
 
-        if self.selectedObj != None:
-            """if self.TexturePos[self.selectedObj][0]+self.loadedTextures[self.selectedObj].get_size()[0] < pygame.mouse.get_pos()[0] < self.TexturePos[self.selectedObj][0] and self.TexturePos[self.selectedObj][1]+self.loadedTextures[self.selectedObj].get_size()[1] < pygame.mouse.get_pos()[1] < self.TexturePos[self.selectedObj]:
-                # USER'S MOUSE IS OUTSIDE OF SELECTED OBJECT
-                print("outside of selected obj")
-                if pygame.mouse.get_presssed()[0] == 1:
-                    self.selectedObj = None # DOESNT WORK!!!!"""
+            self.searchFeild.draw(handler.window, handler)
 
-            textureX, textureY = self.TexturePos[self.selectedObj][0], self.TexturePos[self.selectedObj][1]
-            textureW, textureH = self.loadedTextures[self.selectedObj].get_size()[0], self.loadedTextures[self.selectedObj].get_size()[1]
-            pygame.draw.rect(greeter.window, (255,0,0), (textureX, textureY, textureW, textureH), 4)
+            for obj in self.mapObjects:
+                handler.window.blit(obj, (self.mapObjects[obj][0], self.mapObjects[obj][1]+42))
 
-
-    def editor(self):
-        while self.edit:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                if event.type == pygame.VIDEORESIZE:
-                    greeter.Width, greeter.Height = event.w, event.h
-                    greeter.window = pygame.display.set_mode((greeter.Width, greeter.Height), pygame.RESIZABLE)
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 4:
-                        if gui.scroll[1] > 0:
-                            gui.scroll[1] -= 25
-                    elif event.button == 5:
-                        if gui.scroll[1] < greeter.Height-263:
-                            gui.scroll[1] += 25
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                       if self.selectedObj != None:
-                        self.imgBtnClick['moveBtn'] = None
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        if self.imgBtnClick['weaponBtn'] and weapon_editor.editWeapon == False:
-                            self.imgBtnClick['weaponBtn'] = False
-                        elif weapon_editor.editWeapon == True:
-                            weapon_editor.editWeapon = False
-                        elif self.imgBtnClick['addBtn']:
-                            self.imgBtnClick['addBtn'] = False
-                    keyEvents.append(event.unicode)
-            greeter.window.fill((0,0,255))
-
-            self.draw()
+            if self.selectedObj != None: # DRAW SELECTED OBJ BORDER
+                pygame.draw.rect(handler.window, (255,0,0), (self.mapObjects[self.selectedObj][0], self.mapObjects[self.selectedObj][1]+42, self.selectedObj.get_size()[0], self.selectedObj.get_size()[1]), 2)
             
-            if not self.imgBtnClick['weaponBtn']:
-                if self.imgBtnClick['addBtn']:
-                    #gui.LibViewer(self.BASE_DIR + '/Resources/Maps/', 'png')
-                    # ALPHA PURPOSES ONLY!!!
-                    #fileName = input("File to load in Map Dir: ")
-                    fileName = 'abc'
-                    self.drawLoader()
-                    try:
-                        texture = pygame.image.load(self.BASE_DIR + '/Resources/Maps/%s.png' % (fileName))
-                        self.loadedTextures[fileName] = texture
-                        texture = pygame.transform.scale(texture, (32,36))
-                        self.TexturePos[fileName] = (texture.get_size()[0], texture.get_size()[1])
-                        self.imgBtnClick['addBtn'] = False
-                    except:
-                        print("Failed to load texture: %s.png" % (fileName))
-
-                if self.imgBtnClick['moveBtn'] == True and self.selectedObj != None:
-                    mouse = pygame.mouse.get_pos()
-                    self.TexturePos[self.selectedObj] = mouse
-
-            if self.imgBtnClick['weaponBtn'] == True:
-                weapon_editor.weaponEditorGUI(greeter.window, self.selectedObj)
-
-            # GET KEY PRESSES AND MOVE MAP AROUND
-            key = pygame.key.get_pressed()
-            for mapObj in self.TexturePos:
-                if key[pygame.K_w] or key[pygame.K_UP]:
-                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0], self.TexturePos[mapObj][1] - greeter.Height//116
-                elif key[pygame.K_s] or key[pygame.K_DOWN]:
-                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0], self.TexturePos[mapObj][1] + 15
-                elif key[pygame.K_a] or key[pygame.K_LEFT]:
-                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0] - 15, self.TexturePos[mapObj][1]
-                elif key[pygame.K_d] or key[pygame.K_RIGHT]:
-                    self.TexturePos[mapObj] = self.TexturePos[mapObj][0] + 15, self.TexturePos[mapObj][1]  
-
-
-
+            if self.openWepEditor == True:
+                self.weaponEditor(10, 10)
+            # END DRAWING
+            # DRAW MAP ADJUSTABLE MAP BORDERS
+            #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0], self.mapSize[1]), (self.mapSize[0], self.mapSize[1]+self.mapSize[3]), 16) # mapX
+            #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0]+self.mapSize[2], self.mapSize[1]), (self.mapSize[0]+self.mapSize[2], self.mapSize[3]), 16) # mapW
+            #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0], self.mapSize[1]), (self.mapSize[0]+self.mapSize[2], self.mapSize[1]), 16) # mapY
             pygame.display.flip()
 
-    def drawLoader(self):
-        pygame.draw.rect(greeter.window, (0,139,139), (40, 20, greeter.Width-80, greeter.Height-40)) # Background
-        #pygame.draw.rect(greeter.window, (255,255,255), (60, ))
+            # UPDATE LOGIC
+            if handler.vUpdate == True:
+                #self.errMsg.update(handler.width//3, 160)
+                self.searchFeild.update(handler.width//3, (handler.height//2)-80, handler.width//3, 160)
+                handler.vUpdate = False
+
+            # BUTTON EVENTS
+            if self.addBtn.pressed == True:
+                self.searchFeild.display = True
+                self.addBtn.pressed = False
+            if self.selBtn.pressed == True:
+                self.select = True
+                self.selBtn.pressed = False
+            if self.movBtn.pressed == True:
+                self.move = True
+                self.movBtn.pressed = False
+            if self.remBtn.pressed == True:
+                if self.selectedObj != None:
+                    del self.mapObjects[self.selectedObj]
+                    self.selectedObj = None
+                self.remBtn.pressed = False
+            if self.wepBtn.pressed == True:
+                if self.selectedObj != None:
+                    self.openWepEditor = True
+                    self.wepBtn.pressed = False
 
 
 
-                
+            # LOGIC
+            if ''.join(self.searchFeild.formObj[0].textOut) != '' and self.searchFeild.finishAction == True: # LOGIC FOR LOADING MAP OBJECTS
+                # GET USER INPUT AND CHECK IF FILE EXSISTS THEN LOAD
+                print(BASE_DIR + 'src\\Resources\\Maps\\%s.png' % (''.join(self.searchFeild.formObj[0].textOut)))
+                if os.path.isfile(BASE_DIR + 'src\\Resources\\Maps\\%s.png' % (''.join(self.searchFeild.formObj[0].textOut))):
+                    self.mapObjects[pygame.image.load(BASE_DIR + 'src\\Resources\\Maps\\%s.png' % (''.join(self.searchFeild.formObj[0].textOut)))] = (0,0)
+                else:
+                    print("Couldn't load %s" % (''.join(self.searchFeild.formObj[0].textOut)))
+                self.searchFeild.finishAction = False
 
-world = World()
-weapon_editor = WeaponEditor()
-gui = GUI()
-editor = mapEditor()
+            if self.select == True: # SELECT BTN ACTIVE
+                mouse = pygame.mouse.get_pos()
+                for obj in self.mapObjects:
+                    if (self.mapObjects[obj][0]*32)+obj.get_size()[0] > mouse[0] > self.mapObjects[obj][0] and ((self.mapObjects[obj][1]*32)+42)+obj.get_size()[1] > mouse[1] > (self.mapObjects[obj][1]*32)+42:
+                        for event in handler.event_list:
+                            if event.type == pygame.MOUSEBUTTONDOWN:
+                                if event.button == 1:
+                                    if self.selectedObj != obj:
+                                        self.selectedObj = obj
+                                        self.select = False
+                                    else:
+                                        # unselect selected object
+                                        self.selectedObj = None
+                                        self.select = False
+            if self.move == True:
+                if self.selectedObj != None:
+                    mouse = pygame.mouse.get_pos()
+                    for event in handler.event_list:
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            if event.button == 1:
+                                self.updateMove = True
+                        if self.updateMove == True:
+                            if event.type == pygame.MOUSEMOTION:
+                                self.mapObjects[self.selectedObj] = (mouse[0], mouse[1])
+                            if event.type == pygame.MOUSEBUTTONUP:
+                                if event.button == 1:
+                                    self.updateMove = False
+                            if event.type == pygame.KEYDOWN:
+                                if event.key == pygame.K_RETURN:
+                                    self.updateMove = False
 
-editor.editor()
+
+
+
+
+            
+
+
+"""class Menu:
+    
+    def __init__(self):
+        pass
+
+# GAME MODES
+
+class Singleplayer:
+
+    def __init__(self):
+        pass
+
+class Multiplayer:
+
+    def __init__(self):
+        pass
+
+class Sandbox:
+
+    def __init__(self):
+        pass
+"""
+
+editor = Editor(0, 42, handler.width, handler.height)
+editor.draw()
