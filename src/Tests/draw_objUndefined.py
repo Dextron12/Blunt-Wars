@@ -8,7 +8,7 @@ menu = pygame.Surface((int(width-20),int(height-30)))
 
 # initiate | load objects into list or dict
 loadedObj = []
-for obj in range(137):
+for obj in range(17):
     loadedObj.append(obj)
 
 maxX, maxY = 0, 0
@@ -69,10 +69,10 @@ while True:
     for x in range(maxX):
         for y in range(dataColumn):
             if y == dataColumn-1 and len(loadedObj) % maxX != 0:
-                pygame.draw.rect(menu, (255, 0, 0), (16+(48*(x-dataRow)), 16+(48*y)-scrollY, 32, 32))
+                pygame.draw.rect(window, (255, 0, 0), (16+(48*(x-dataRow)), 16+(48*y)-scrollY, 32, 32))
             else:
-                pygame.draw.rect(menu, (255, 0, 0), (16+(48*x), 16+(48*y)-scrollY, 32, 32))
-    window.blit(menu, (10, 10))        
+                pygame.draw.rect(window, (255, 0, 0), (16+(48*x), 16+(48*y)-scrollY, 32, 32))
+    #window.blit(menu, (10, 10))        
     pygame.display.flip()
 
     scrollSpeed = (dataColumn//4)*0.15

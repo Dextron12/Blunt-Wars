@@ -78,8 +78,6 @@ class Form(object):
 
         self.usewh = whFull # uses abitary mouse search loop using only the length and width coords
 
-        print("Initailized form. Will draw at (%s, %s)" % (self.x, self.y))
-
     def draw(self, surface, event, drawX=None, drawY=None): # DRAW COORDS FOR WHEN DRAIWWNG FORM TO SURFACE USING SCREEN COORDS TO ACTIVATE MOUSE FAILS IF DRAW COORDS ARENT USED
         if self.mode == True:
             pygame.draw.rect(surface, (255,255,255), (self.x,self.y,self.w,self.h)) # BACKGROUND
@@ -360,7 +358,7 @@ class formPopup:
 
 class dynamicArray:
 
-    def __init__(self, x, y, w, h, dataObject, searchForm=False, dynamicScroll=True):
+    def __init__(self, x, y, w, h, scrollHeight, dataObject, searchForm=False, dynamicScroll=True):
         # searchForm = if there should be a search box at teh top
         # dynamicScroll = controls if there should be a scrollbar if required or not
         self.x, self.y, self.w, self.h = x, y, w, h
@@ -373,12 +371,13 @@ class dynamicArray:
         self.dataColumn = len(dataObject) // self.maxX
         self.dataRow = 0
         self.scroll = False # different fron dynamic scroll. Dynamic scroll tells script to check if it needs a scrollbar. Scroll is the switch for the scroll bar
+        self.scrollH = scrollHeight
+        self.scrollp = 0
 
         # HANDLE DYNAMIC SCROLLING
         if dynamicScroll == True: 
             # Dynamic Scrolling is not specifically enabled. It is only enabled when the size of the data to draw is to large for the area specified
             if self.dataColumn > self.maxX:
-                self.scrollH = h-20
                 self.scrollSpeed = self.dataColumn*0.7 # GO %70 as fast as how many objects are drawn
                 self.scrollY = 0
                 self.scroll = True
@@ -388,8 +387,11 @@ class dynamicArray:
         else:
             self.scroll = False
 
+        self.updateRow = True
+
         # populate drawList with all objects to draw
         #try:
+
         for obj in range(len(self.data)):
             self.drawList.append(obj)
         #except TypeError: raise Exception('Invalid data Object')
@@ -399,18 +401,25 @@ class dynamicArray:
         # determine if data does not compleet a full row
         if len(self.drawList) % self.maxX != 0: # if this reutns a num it is the num of objs that dont copmplete the row
             self.dataColumn += 1 # minipulates program into drawing our missing data from a null row
-            self.dataRow = self.maxX - len(self.drawList) % self.maxX
+            self.dataRow = self.maxX - (len(self.drawList) % self.maxX)
 
+            #!---THE SECRET INGREIDENT TO THE SAUCE---
+
+            # REMOVE EXTRA DRAWN DataRows. Prevents extra cubes from drawing outside of dynamicArray
+            """for i in list(self.drawList):
+                if i <= self.dataRow-1:
+                    del self.drawList[-1]"""
+        print(self.drawList)
 
     def draw(self, surface, eventObject, testMode=False):
         # TestMode = Draws rectangles instead of objects define din the dictionary given to init func
+        cursorCount = -1
 
         if self.scroll == True:
             pygame.draw.rect(surface, (128,128,128), (self.x-10, self.y+10, 18, self.scrollH)) # Scroll Gb
-            pygame.draw.rect(surface, (0,0,0), (self.x-8, self.y+12-self.scrollY, 14, 60)) # Scroll Bar
-
+            pygame.draw.rect(surface, (0,0,0), (self.x-8, self.y+12+self.scrollp, 14, 60)) # Scroll Bar
         # Draw Dynamic Grid array based on dataObject given
-        for x in range(self.maxX):
+        """for x in range(self.maxX):
             for y in range(self.dataColumn): # Using self.dataColumn instead of self.maxY because self.dataColumn holds the manipulated columns
                 if y ==  self.dataColumn-1 and len(self.drawList) % self.maxX != 0:
                     if testMode == True:
@@ -427,17 +436,57 @@ class dynamicArray:
                         if type(self.data) == dict:
                             surface.blit(self.data.get(list(self.data)[y]), (16+(48*x)+self.x, 16+(48*y)+self.y))
                         if type(self.data) == list:
-                            surface.blit(self.data[y], (16+(48*x), (16+(48*y)-self.scrollY)))
-        # Handle Logic Here
+                            surface.blit(self.data[y], (16+(48*x), (16+(48*y)-self.scrollY)))"""
+        mouse = pygame.mouse.get_pos()
+        # !-- CRITICAL WARNIGN -- Don't add or subtract on posX when drawing incomplete rows. This causes the incomplete rows to draw false data sets off the specified window
+        for x in range(self.maxX):
+            for y in range(self.dataColumn):
+                if y == self.dataColumn-1 and len(self.drawList) % self.maxX != 0: # DRAW INCOMPLETE ROWS IF ANY
+                    if testMode == True:
+                        pygame.draw.rect(surface, (255, 0, 0), (16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY, 32, 32))
+                    else:
+                        if type(self.data) == dict:
+                            if x-self.dataRow > -1:
+                                surface.blit(self.data.get(list(self.data)[y+(x-self.dataRow)]), (self.x+16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY))
+                        if type(self.data) == list:
+                            surface.blit(self.data[y+(x-self.dataRow)], (16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY))
+                else:
+                    if testMode == True:
+                        if self.y-48+(48*y)+self.scrollY > -0.8:
+                            pygame.draw.rect(surface, (255, 0, 0), self.x+(16+(48*x), self.y+16+(48*y)+self.scrollY, 32, 32))
+                        else:
+                            if type(self.data) == dict:
+                                surface.blit(self.data.get(list(self.data)[y+(x-self.dataRow)]), (16+(48*x), (16+(48*y)-self.scrollY)))
+                            if type(self.data) == list:
+                                surface.blit(self.data[y+(x-self.dataRow)], (16+(48*x), (16+(48*y)-self.scrollY)))
+                # HANDLE IF USER SELECTS WEAPON TO EDIT
+                if (16+(48*x))+32 > mouse[0] > 16+(48*x):
+                    if (self.y+16+(48*y)+self.scrollY)+74 > mouse[1] > self.y+58+(48*y)+self.scrollY:
+                        if y == self.dataColumn-1 and len(self.drawList) % self.maxX != 0: # HANDLE MOUSE PRESSSES FOR INCOMPLETE ROWS
+                            if x < self.maxX-self.dataRow:
+                                if y > 0:
+                                    cursorCount = (y+9)+x
+                                else:
+                                    cursorCount = y+x
+                        else:
+                            if y > 0:
+                                cursorCount = (y+9)+x
+                            else:
+                                cursorCount = y+x
+                        print(cursorCount)
+
+
+            # Handle Logic Here
 
         if self.scroll == True:
             for event in eventObject.event_list:
                 if event.type == pygame.MOUSEBUTTONDOWN: # HANDLE SCROLLING EVENTS
                     if event.button == 4:
-                        if self.scrollY < self.y-80:
-                            self.scrollY += self.scrollSpeed
+                        self.scrollY += self.scrollSpeed
                     if event.button == 5:
                         self.scrollY -= self.scrollSpeed
+
+        
 
             
             
