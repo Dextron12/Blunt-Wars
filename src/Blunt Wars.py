@@ -2,6 +2,8 @@ import pygame, os
 
 from Scripts import PygUI as ui
 from ast import literal_eval
+from datetime import datetime
+from random import choice
 
 BASE_DIR = os.getcwd()
 BASE_DIR = BASE_DIR + '\\'
@@ -13,6 +15,8 @@ class Auth:
     def __init__(self):
         self.User = 'Guest'
         self.logged = False
+
+auth = Auth()
 
 class Weapons:
 
@@ -70,7 +74,8 @@ class Editor:
         # WEAPON EDITOR GUI VARIABLES
         self.weaponsGUI = pygame.Surface((self.mapSize[2]-20, self.mapSize[3]-72))
         self.openWepEditor = False
-        self.privWeapons = [] # A list of map specific weapons can be toggled in editor
+        self.CountryWeapons = {} # NAME: {weaponName: surface, weaponName: surface} # A DICT THAT STORES ALL COUNTRIES WITH ASSOCIATED WEAPONS
+        self.Weapons = weapons.weaponObj # A copy of the global weapons dict for map editing ONLY!!
 
         # LOAD ALL WEAPON OBJECTS
         weapons.load_all(BASE_DIR + '\\src\\Resources\\Objects\\Weapon')
@@ -78,16 +83,19 @@ class Editor:
         # Define UI Apps
         pygame.time.set_timer(pygame.USEREVENT, 800)
         self.searchFeild = ui.formPopup(handler.width//3, (handler.height//2)-80, handler.width//3, 160, "Load Map File", "Enter File name to load into map", pygame.USEREVENT, 1)
-
-        self.addedWeaponArray = ui.dynamicArray(10, 80, self.weaponsGUI.get_size()[0]+(self.weaponsGUI.get_size()[0]//2)+10, self.weaponsGUI.get_size()[0]+(self.weaponsGUI.get_size()[0]//2)-90, self.weaponsGUI.get_size()[1]-10, weapons.weaponObj)
+        self.saveMap = ui.formPopup(handler.width//3, (handler.height//2)-60, handler.width//3, 120, 'Save Map', 'Name of Map', pygame.USEREVENT, 1)
 
         # Map Editor stuff
         self.mapObjects = {} # Name: [Surface, posX, posY]
         self.selectedObj = None # SELECTED SRUFACE: (posX, posY) 
+        self.selectedWeapon = None # Name of weapon | USED AS A RETURN METHOD IF WEAPON PRESSED IN EDITOR
         self.select = False
         self.move = False
 
         self.updateMove = False
+
+        self.availableWeaponArray = ui.dynamicArray(self.weaponsGUI.get_size()[0]//2, 80, self.weaponsGUI.get_size()[0]+(self.weaponsGUI.get_size()[0]//2)+10, self.weaponsGUI.get_size()[0]+(self.weaponsGUI.get_size()[0]//2)-90, self.weaponsGUI.get_size()[1]-10, self.Weapons)
+        self.addedWeaponArray = ui.dynamicArray(10, 80, self.weaponsGUI.get_size()[0]//2, self.weaponsGUI.get_size()[1]-10,self.weaponsGUI.get_size()[1]-10, self.CountryWeapons.get(self.selectedObj))
 
 
     def weaponEditor(self, x, y):
@@ -103,8 +111,12 @@ class Editor:
         self.weaponsGUI.blit(ui.text.bare((49, 79, 79), 'Tahoma', 18, 'Added Weapons'), (int(sizeX//4)-42, 42))
         self.weaponsGUI.blit(ui.text.bare((49, 79, 79), 'Tahoma', 18, "Available Weapons"), ((sizeX//2)+(int(sizeX//4)-42), 42))
 
-        self.addedWeaponArray.draw(self.weaponsGUI, handler)
-
+        selector = self.availableWeaponArray.draw(self.weaponsGUI, handler, 32)
+        if selector != None:
+            self.selectedWeapon = selector
+        selector = self.addedWeaponArray.draw(self.weaponsGUI, handler, 32)
+        if selector != None:
+            self.selectedWeapon = selector
 
         # LOGIC
         mouse = pygame.mouse.get_pos()
@@ -122,6 +134,43 @@ class Editor:
         # DRAW EXIT BUTTON
         pygame.draw.line(self.weaponsGUI, (0,0,0), (sizeX-28, 0), (sizeX, 28), 2)
         pygame.draw.line(self.weaponsGUI, (0,0,0), (sizeX, 0), (sizeX-28, 28), 2)
+
+        # Handle weapon editor button events and movement
+        if self.selectedWeapon in self.Weapons:
+            if mouse[0] < self.weaponsGUI.get_size()[0]//2:
+                for event in handler.event_list:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            if self.selectedObj not in self.CountryWeapons:
+                                self.CountryWeapons[self.selectedObj] = {self.selectedWeapon: self.Weapons[self.selectedWeapon]}
+                            else:
+                                self.CountryWeapons[self.selectedObj][self.selectedWeapon] = self.Weapons[self.selectedWeapon]
+                            # remove weaponObject from self.Weapons
+                            self.Weapons.pop(self.selectedWeapon)
+                            #Update Dynamic Array's. Required updtating to change how many items are being drawn
+                            self.availableWeaponArray.update(self.Weapons)
+                            self.addedWeaponArray.update(self.CountryWeapons[self.selectedObj]) # UPDATES ARRAY WITH DICT FROM COUNTRY
+                            #Clear selected weapon Object
+                            self.selectedWeapon = None
+        if self.CountryWeapons != {}:
+            if self.selectedWeapon in self.CountryWeapons[self.selectedObj]:
+                if mouse[0] > self.weaponsGUI.get_size()[0]//2:
+                    for event in handler.event_list:
+                        if event.type == pygame.MOUSEBUTTONDOWN:
+                            if event.button == 1:
+                                self.Weapons[self.selectedWeapon] = self.CountryWeapons[self.selectedObj][self.selectedWeapon]
+                                # remove weapon object from self.CountryWeapons
+                                self.CountryWeapons[self.selectedObj].pop(self.selectedWeapon)
+                                # Update Array's
+                                self.availableWeaponArray.update(self.Weapons)
+                                self.addedWeaponArray.update(self.CountryWeapons[self.selectedObj])
+                                #Clear selected weapon
+                                self.selectedWeapon = None
+        if self.selectedWeapon != None:
+            for event in handler.event_list:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        print('pressed enter')
 
 
         handler.window.blit(self.weaponsGUI, (x, y+42))
@@ -163,6 +212,8 @@ class Editor:
             #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0], self.mapSize[1]), (self.mapSize[0], self.mapSize[1]+self.mapSize[3]), 16) # mapX
             #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0]+self.mapSize[2], self.mapSize[1]), (self.mapSize[0]+self.mapSize[2], self.mapSize[3]), 16) # mapW
             #pygame.draw.line(handler.window, (0,0,0), (self.mapSize[0], self.mapSize[1]), (self.mapSize[0]+self.mapSize[2], self.mapSize[1]), 16) # mapY
+            if self.saveMap.display == True:
+                self.writeSave()
             pygame.display.flip()
 
             # UPDATE LOGIC
@@ -190,6 +241,9 @@ class Editor:
                 if self.selectedObj != None:
                     self.openWepEditor = True
                     self.wepBtn.pressed = False
+            if self.saveBtn.pressed == True:
+                self.saveMap.display = True
+                self.saveBtn.pressed = False
 
 
 
@@ -242,15 +296,59 @@ class Editor:
             # User Saved By
             # mapSize
             # mapObjects
-            # weaponObjects
-            # privObjects
-
-            # !- Possible Problems -!
-            # Cannot get directtory of mapObject
-            # Cannot get directory of WeaponObject
+            # Country Weapons
 
         # CHECK  IF OFFENSIV EOF DEFENSIVE DATA CHANGED IF SO ADD NEW DATA
-        pass
+        '''if auth.logged == True:
+            # need to get name of saved file
+            user = auth.User
+            time = datetime.now()
+            if time.hour < 12:
+                saveTime = '%s-%s-%s, %sam:%s' %s (time.day, time.month, time.year, time.hour, time.minute)# Time standard!! dd--mm--yy, hour:minute
+            else: #convert time 12 hour time from 24 hour time
+                saveTime = '%s-%s-%s, %spm:%s' %s (time.day, time.month, time.year, time.hour-12, time.minute)
+            self.mapSize
+            self.mapObjects
+            self.CountryWeapons'''
+        self.saveMap.draw(handler.window, handler)
+
+        # LOGIC
+
+        if ''.join(self.saveMap.formObj[0].textOut) != '' and self.saveMap.finishAction == True:
+            if os.path.isdir(BASE_DIR + 'src\\Resources\\SavedMaps\\') == False: # Map folder exists
+                os.mkdir(BASE_DIR + 'src\\Resources\\SavedMaps\\')
+            fileName = ''.join(self.saveMap.formObj[0].textOut)
+            # CHECK IF FILENAME IS TAKEN
+            if os.path.isfile(BASE_DIR + 'src\\Resources\\SavedMaps\\%s.dat' % (fileName)) == False: # file name not in use
+                # Begin save data dump
+                if auth.logged == True:
+                    time = datetime.now()
+                    if time.hour < 12:
+                        savedTime = '%s-%s-%s, (%s:%sam)' % (time.day, time.month, time.year, time.hour, time.minute)
+                    else:
+                        savedTime = '%s-%s-%s, (%s:%spm)' % (time.day, time.month, time.year, time.hour-12, time.minute)
+                    mapData = {} # {CountryName: [posX, posY]}
+                    for i in self.mapObjects:
+                        mapData[i] = [self.mapObjects[i][1], self.mapObjects[i][2]]
+                    weapons = {}# {CountryName: [weapon1, weapon2]}
+                    for name in self.CountryWeapons:
+                        for i in self.CountryWeapons[name]:
+                            if name in weapons:
+                                weapons[name].append(i)
+                            else:
+                                weapons[name] = []
+                                weapons[name].append(i)
+                    self.saveMap.finishAction = False
+                    self.saveMap.formObj[0].textOut = ''
+
+                    #Write allocated data
+                    with open(BASE_DIR + 'src\\Resources\\SavedMaps\\%s.dat' % (fileName), 'w') as f:
+                        f.write('%s\n%s\n%s\n%s\n%s\n%s\n' % (fileName, savedTime, auth.User, self.mapSize, mapData, weapons))
+            else:
+                print('%s is currently used as a map name' % fileName)
+
+            
+
 
 
 
@@ -259,12 +357,137 @@ class Editor:
             
 
 
-"""class Menu:
-    
+class Menu:
     def __init__(self):
-        pass
+        pygame.time.set_timer(pygame.USEREVENT, 800)
+
+        self.memos = []
+        self.memoMsg = None
+        self.popMsg = False
+
+        #Menu Swicthes
+        self.HelpSwitch = False
+        self.SettingsSwitch = False
+        #load game msgs from file
+        if os.path.isfile(BASE_DIR + "src\\Resources\\memo.dat"):
+            with open(BASE_DIR + "src\\Resources\\memo.dat", 'r') as f:
+                data = f.read()
+            self.memos = data.split('\n')
+        else:
+            print("Error loading memos. Consider updating the game!")
+
+    def settings(self):
+        while self.SettingsSwitch:
+            handler.handle()
+            handler.window.fill((105, 105, 105))
+            pygame.draw.rect(handler.window, (0, 191, 255), (0, handler.height-42, handler.width, 42))
+
+            handler.window.blit(ui.text.bare((0,0,0), 'Tahoma', 24, 'Settings'), ((handler.width//2)-48, 32))
+            pygame.draw.line(handler.window, (211, 211, 211), (0, 68), (handler.width, 68))
+
+            # Control Settings
+
+
+            pygame.display.flip()
+
+            #handle logic
+            for event in handler.event_list:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.SettingsSwitch = False
+
+
+    def help(self):
+        while self.HelpSwitch:
+            handler.handle()
+            handler.window.fill((105, 105, 105))
+            pygame.draw.rect(handler.window, (0, 191, 255), (0, handler.height-42, handler.width, 42))
+
+            handler.window.blit(ui.text.bare((0,0,0), 'Tahoma', 24, 'Help'), ((handler.width//2)-42, 32))
+            pygame.draw.line(handler.window, (211, 211, 211), (0, 68), (handler.width, 68))
+
+            pygame.display.flip()
+
+            # handle Logic
+            for event in handler.event_list:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.HelpSwitch = False
+
+    def draw(self):
+        pygame.display.set_caption('Blunt Wars - Menu')
+        self.memoMsg = choice(self.memos)
+        while True:
+            handler.handle()
+            handler.window.fill((105, 105, 105))
+            pygame.draw.rect(handler.window, (0, 191, 255), (0, handler.height-42, handler.width, 42))
+
+            
+            #display memos with pooping effect
+            if self.memos != []:
+                if self.popMsg:
+                    text = ui.text.bare((0, 0, 0), 'Arial', 18, self.memoMsg)
+                else:
+                    text = ui.text.bare((0, 0, 0), 'Arial', 14, self.memoMsg)
+
+                handler.window.blit(text, ( ((handler.width//2)-(text.get_rect()[0]//2)), 55))
+
+            handler.window.blit(ui.text.bare((0,0,0), 'Tahoma', 24, 'Blunt Wars'), ((handler.width//2)-84, 32)) # header
+
+            # Draw menu buttons
+            pygame.draw.rect(handler.window, (211, 211, 211), (20, 85, (handler.width-50)//2, 30)) # Singleplayer
+            pygame.draw.rect(handler.window, (211, 211, 211), (30+(handler.width-50)//2, 85, (handler.width-50)//2, 30)) # Multiplayer
+            pygame.draw.rect(handler.window, (211, 211, 211), (20, 125, (handler.width-50)//2, 30)) # Sandbox
+            pygame.draw.rect(handler.window, (211, 211, 211), (30+(handler.width-50)//2, 125, (handler.width-50)//2, 30)) # Settings
+            pygame.draw.rect(handler.window, (211, 211, 211), (20, 165, handler.width-40, 30)) # help
+
+            # Draw text onto btns
+            handler.window.blit(ui.text.bare((47, 79, 79), 'Arial', 16, 'Singleplayer'), ((handler.width-50)//4, 88))
+            handler.window.blit(ui.text.bare((47, 79, 79), 'Arial', 16, 'Multiplayer'), ( ((30+(handler.width-50)//2)+((handler.width-50)//4)), 88 ))
+            handler.window.blit(ui.text.bare((47, 79, 79), 'Arial', 16, 'Sandbox'), ((handler.width-50)//4, 128))
+            handler.window.blit(ui.text.bare((47, 79, 79), 'Arial', 16, 'Settings'), ( ((30+(handler.width-50)//2)+((handler.width-50)//4)), 128 ))
+            handler.window.blit(ui.text.bare((47, 79, 79), 'Arial', 16, 'Help'), ((handler.width-40)//2, 168))
+
+
+
+
+            pygame.display.flip()
+
+            # Handle logic
+
+            # Check for timer
+            if handler.search(pygame.USEREVENT):
+                if self.popMsg == False:
+                    self.popMsg = True
+                else:
+                    self.popMsg = False
+
+            mouse = pygame.mouse.get_pos()
+            for event in handler.event_list:
+                if 20+(handler.width-50)//2 > mouse[0] > 20 and 115 > mouse[1] > 85:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        print("Clicked singleplayer")
+                if (30+(handler.width-50)//2)+(handler.width-50)//2 > mouse[0] > 20+(handler.width-50)//2 and 115 > mouse[1] > 85:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        print("Clicked Multiplayer")
+                if 20+(handler.width-50)//2 > mouse[0] > 20 and 155 > mouse[1] > 125:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        print('Clicked Sandbox')
+                if (30+(handler.width-50)//2)+(handler.width-50)//2 > mouse[0] > 20+(handler.width-50)//2 and 155 > mouse[1] > 125:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        self.SettingsSwitch = True
+                        self.settings()
+                if handler.width-20 > mouse[0] > 20 and 195 > mouse[1] > 165:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            self.HelpSwitch = True
+                            self.help()
+
+            pygame.display.flip()
+                
 
 # GAME MODES
+"""
 
 class Singleplayer:
 
@@ -281,8 +504,8 @@ class Sandbox:
     def __init__(self):
         pass
 """
-auth = Auth()
-auth.logged = True
 
-editor = Editor(0, 42, handler.width, handler.height)
-editor.draw()
+menu = Menu()
+menu.draw()
+#editor = Editor(0, 42, handler.width, handler.height)
+#editor.draw()

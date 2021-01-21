@@ -46,10 +46,12 @@ class EventHandler:
                 self.vUpdate = True
             if event.type == pygame.KEYDOWN:
                 if self.logEvents:
-                    if event.key != pygame.K_BACKSPACE or pygame.K_CAPSLOCK or pygame.K_ESCAPE: # BLACKLISTED KEYS FOR RAW TEXT
+                    if event.key != pygame.K_BACKSPACE or pygame.K_CAPSLOCK or pygame.K_ESCAPE or pygame.K_RETURN: # BLACKLISTED KEYS FOR RAW TEXT
                         self.pressedKey = list(event.unicode)
                     if event.key == pygame.K_BACKSPACE:
                         self.pressedKey = ['backspace']
+                    if event.key == pygame.K_RETURN:
+                        self.pressedKey = ['return']
         self.update()
 
     def search(self, eventName): # SEARCH FOR AN EVENT IN THE EVENT QUEUE
@@ -78,6 +80,8 @@ class Form(object):
 
         self.usewh = whFull # uses abitary mouse search loop using only the length and width coords
 
+        self.TextObject = None # var to store text output object
+
     def draw(self, surface, event, drawX=None, drawY=None): # DRAW COORDS FOR WHEN DRAIWWNG FORM TO SURFACE USING SCREEN COORDS TO ACTIVATE MOUSE FAILS IF DRAW COORDS ARENT USED
         if self.mode == True:
             pygame.draw.rect(surface, (255,255,255), (self.x,self.y,self.w,self.h)) # BACKGROUND
@@ -86,9 +90,11 @@ class Form(object):
 
             #DRAW INPUT TO FORM
             if self.encryption == False:
-                surface.blit(text.bare((48, 79, 79), 'Arial', self.h//2, ''.join(self.textOut)), (self.x+10, self.y+2))
+                self.TextObject = text.bare((48, 79, 79), 'Arial', self.h//2, ''.join(self.textOut))
+                surface.blit(self.TextObject, (self.x+10, self.y+2))
             else: # ENCRYPT AND DISPLAY MESSAGE
-                surface.blit(text.bare((47, 79, 79), 'Arial', self.h//2, "*" * len(''.join(self.textOut))), (self.x+10, self.y+2))
+                self.TextObject = text.bare((47, 79, 79), 'Arial', self.h//2, "*" * len(''.join(self.textOut)))
+                surface.blit(self.textObject, (self.x+10, self.y+2))
 
             if self.activeForm == False and self.textOut == []: # DRAW INACTIVE MESSAGE
                 surface.blit(text.bare((48, 79, 79), 'Arial', self.h//2, self.msg), (self.x+10, self.y+2))
@@ -104,18 +110,20 @@ class Form(object):
 
             #DRAW INPUT TO FORM
             if self.encryption == False:
-                surface.blit(text.bare((240, 255, 255), 'Arial', self.h//2, ''.join(self.textOut)), (self.x+10, self.y+2))
+                self.TextObject = text.bare((240, 255, 255), 'Arial', self.h//2, ''.join(self.textOut))
+                surface.blit(self.TextObject, (self.x+10, self.y+2))
             else:
-                surface.blit(text.bare((240, 255, 255), 'Arial', self.h//2, "*" * len(''.join(self.textOut))), (self.x+10, self.y+2))
+                self.TextObject = text.bare((240, 255, 255), 'Arial', self.h//2, "*" * len(''.join(self.textOut)))
+                surface.blit(self.TextObject, (self.x+10, self.y+2))
 
             if self.activeForm == False and self.textOut == []:
                 surface.blit(text.bare((240,255,255), 'Arial', self.h//2, self.msg), (self.x+10, self.y+2))
 
-            if self.activeTimer == True:
-                pygame.draw.line(surface, (240,255,255), (self.x+10, self.y+5), (self.x+10, self.y+20), 2)
+            if self.activeTimer == True and self.activeForm == True:
+                pygame.draw.line(surface, (240,255,255), (self.x+10+self.TextObject.get_size()[0], self.y+5), (self.x+10+self.TextObject.get_size()[0], self.y+20), 2)
 
         # DO LOGIC
-        
+
         # CHECKS IF FORM ACTIVE
         mouse, click = pygame.mouse.get_pos(), pygame.mouse.get_pressed()
 
@@ -132,9 +140,14 @@ class Form(object):
 
         if event.logEvents == True and event.pressedKey != []:
             if event.pressedKey[0] != 'backspace':
-                self.textOut.append(event.pressedKey[0])
-                event.pressedKey = []
+                if event.pressedKey[0] != 'return':
+                    self.textOut.append(event.pressedKey[0])
+                    event.pressedKey = []
             elif event.pressedKey[0] == 'backspace':
+                if self.textOut != []:
+                    del self.textOut[-1]
+                    event.pressedKey = []
+            elif event.pressedKey[0] == 'return':
                 if self.textOut != []:
                     del self.textOut[-1]
                     event.pressedKey = []
@@ -143,7 +156,7 @@ class Form(object):
         if self.activeForm == True: # CURSOR SWITCH
             if event.search(self.timer):
                 if self.activeTimer == False:
-                    self.activeTimer = 4
+                    self.activeTimer = True
                 elif self.activeTimer == True:
                     self.activeTimer = False
 
@@ -347,6 +360,7 @@ class formPopup:
 
             surface.blit(self.window, (self.x, self.y))
 
+
             for i in range(self.formNum): # DRAW FORMS
                 self.formObj[i].draw(surface, eventObj)
             
@@ -368,7 +382,9 @@ class dynamicArray:
         self.maxX = int((w//32)*0.7)
         self.maxY = int((h//32)*0.7)
 
-        self.dataColumn = len(dataObject) // self.maxX
+        if dataObject != None:
+            self.dataColumn = len(dataObject) // self.maxX
+        else: self.dataColumn = 0
         self.dataRow = 0
         self.scroll = False # different fron dynamic scroll. Dynamic scroll tells script to check if it needs a scrollbar. Scroll is the switch for the scroll bar
         self.scrollH = scrollHeight
@@ -390,10 +406,9 @@ class dynamicArray:
         self.updateRow = True
 
         # populate drawList with all objects to draw
-        #try:
-
-        for obj in range(len(self.data)):
-            self.drawList.append(obj)
+        if self.data != None:
+            for obj in range(len(self.data)):
+                self.drawList.append(obj)
         #except TypeError: raise Exception('Invalid data Object')
         
         #---THE SPECIAL SAUCE---
@@ -405,78 +420,62 @@ class dynamicArray:
 
             #!---THE SECRET INGREIDENT TO THE SAUCE---
 
-            # REMOVE EXTRA DRAWN DataRows. Prevents extra cubes from drawing outside of dynamicArray
+            # REMOVE EXTRA DRAWN DataRows. Prevents extra cubes from drawing outside of dynamicArray | Only required for testing mode
             """for i in list(self.drawList):
                 if i <= self.dataRow-1:
                     del self.drawList[-1]"""
-        print(self.drawList)
 
-    def draw(self, surface, eventObject, testMode=False):
+    def draw(self, surface, eventObject, scale, testMode=False):
         # TestMode = Draws rectangles instead of objects define din the dictionary given to init func
-        cursorCount = -1
 
         if self.scroll == True:
             pygame.draw.rect(surface, (128,128,128), (self.x-10, self.y+10, 18, self.scrollH)) # Scroll Gb
             pygame.draw.rect(surface, (0,0,0), (self.x-8, self.y+12+self.scrollp, 14, 60)) # Scroll Bar
         # Draw Dynamic Grid array based on dataObject given
-        """for x in range(self.maxX):
-            for y in range(self.dataColumn): # Using self.dataColumn instead of self.maxY because self.dataColumn holds the manipulated columns
-                if y ==  self.dataColumn-1 and len(self.drawList) % self.maxX != 0:
-                    if testMode == True:
-                        pygame.draw.rect(surface, (255, 0, 0), (16+(46*(x-self.dataRow)+self.x), self.y+16+(48*y)-self.scrollY, 32, 32))
-                    else:
-                        if type(self.data) == dict:
-                            surface.blit(self.data.get(list(self.data)[y]), (self.x+16+(48*(x-self.dataRow)), self.y+16+(48*y)-self.scrollY))
-                        if type(self.data) == list:
-                            surface.blit(self.data[y], (16+(48*(x-self.dataRow))+self.x, 16+(48*y)+self.y))
-                else:
-                    if testMode == True:
-                        pygame.draw.rect(surface, (255, 0, 0), (16+(48*x)+self.x, self.y+16+(48*y)-self.scrollY, 32, 32))
-                    else:
-                        if type(self.data) == dict:
-                            surface.blit(self.data.get(list(self.data)[y]), (16+(48*x)+self.x, 16+(48*y)+self.y))
-                        if type(self.data) == list:
-                            surface.blit(self.data[y], (16+(48*x), (16+(48*y)-self.scrollY)))"""
         mouse = pygame.mouse.get_pos()
         # !-- CRITICAL WARNIGN -- Don't add or subtract on posX when drawing incomplete rows. This causes the incomplete rows to draw false data sets off the specified window
         for x in range(self.maxX):
             for y in range(self.dataColumn):
                 if y == self.dataColumn-1 and len(self.drawList) % self.maxX != 0: # DRAW INCOMPLETE ROWS IF ANY
                     if testMode == True:
-                        pygame.draw.rect(surface, (255, 0, 0), (16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY, 32, 32))
+                        pygame.draw.rect(surface, (255, 0, 0), (16+((16+scale)*(x-self.dataRow)), self.y+16+((16+scale)*y)+self.scrollY, scale, scale))
                     else:
                         if type(self.data) == dict:
                             if x-self.dataRow > -1:
-                                surface.blit(self.data.get(list(self.data)[y+(x-self.dataRow)]), (self.x+16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY))
+                                surface.blit(self.data.get(list(self.data)[y+(x-self.dataRow)]), (16+((scale)*(x-self.dataRow))+self.x, self.y+16+((16+scale)*y)+self.scrollY))
+
                         if type(self.data) == list:
-                            surface.blit(self.data[y+(x-self.dataRow)], (16+(48*(x-self.dataRow)), self.y+16+(48*y)+self.scrollY))
+                            surface.blit(self.data[y+(x-self.dataRow)], (self.x+16+((16+scale)*(x-self.dataRow)), self.y+16+((16+scale)*y)+self.scrollY))
                 else:
                     if testMode == True:
-                        if self.y-48+(48*y)+self.scrollY > -0.8:
-                            pygame.draw.rect(surface, (255, 0, 0), self.x+(16+(48*x), self.y+16+(48*y)+self.scrollY, 32, 32))
+                        if self.y-48+((16+scale)*y)+self.scrollY > -0.8:
+                            pygame.draw.rect(surface, (255, 0, 0), (self.x+(16+((16+scale)*x)), self.y+16+((16+scale)*y)+self.scrollY, scale, scale))
                         else:
+                            #print(self.data)
                             if type(self.data) == dict:
-                                surface.blit(self.data.get(list(self.data)[y+(x-self.dataRow)]), (16+(48*x), (16+(48*y)-self.scrollY)))
+                                surface.blit(pygame.transform.scale(self.data.get(list(self.data)[y+(x-self.dataRow)])), self.x+(16+((self.x+scale)*x), (16+((16+scale)*y)-self.scrollY)))
                             if type(self.data) == list:
-                                surface.blit(self.data[y+(x-self.dataRow)], (16+(48*x), (16+(48*y)-self.scrollY)))
+                                surface.blit(self.data[y+(x-self.dataRow)], (16+((16+scale)*x), self.x+(16+((16+scale)*y)-self.scrollY)))
                 # HANDLE IF USER SELECTS WEAPON TO EDIT
-                if (16+(48*x))+32 > mouse[0] > 16+(48*x):
-                    if (self.y+16+(48*y)+self.scrollY)+74 > mouse[1] > self.y+58+(48*y)+self.scrollY:
+                """if self.x+(16+((16+scale)*x))+32 > mouse[0] > 16+((16+scale)*x):
+                    if (self.y+16+((16+scale)*y)+self.scrollY)+74 > mouse[1] > self.y+58+((16+scale)*y)+self.scrollY:
                         if y == self.dataColumn-1 and len(self.drawList) % self.maxX != 0: # HANDLE MOUSE PRESSSES FOR INCOMPLETE ROWS
                             if x < self.maxX-self.dataRow:
-                                if y > 0:
-                                    cursorCount = (y+9)+x
-                                else:
-                                    cursorCount = y+x
-                        else:
-                            if y > 0:
-                                cursorCount = (y+9)+x
-                            else:
-                                cursorCount = y+x
-                        print(cursorCount)
-
-
+                                print(y+x)
+                                for event in eventObject.event_list:
+                                    if event.type == pygame.MOUSEBUTTONDOWN:
+                                        if event.button == 1:
+                                            #call form that allows editing of the weapon/defence Unless its click and hold if so move the object to another list
+                                            print('Clicked On: %s' % (y+x))"""
+                if self.x+(16+((16+scale)*x))+28 > mouse[0] > self.x+(16+((16+scale))*x): # USES APROX VALUES FOR SIZING!!!! | GET TEXTURE SIZE FOR PROPER BUTTON MAPING
+                    if self.y+(64+((16+scale)*y)-self.scrollY)+32 > mouse[1] > self.y+64+((16+scale)*y)-self.scrollY:
+                        if y == self.dataColumn-1 and len(self.drawList) % self.maxX != 0:
+                            if x < self.maxX-self.dataRow:
+                                for event in eventObject.event_list:
+                                    if event.type == pygame.MOUSEBUTTONDOWN:
+                                        return list(self.data)[y+x]
             # Handle Logic Here
+
 
         if self.scroll == True:
             for event in eventObject.event_list:
@@ -486,8 +485,133 @@ class dynamicArray:
                     if event.button == 5:
                         self.scrollY -= self.scrollSpeed
 
+        return None
+
+    def update(self, dataObject):
+        self.data = {}
+        self.dataColumn = 0
+        self.drawList = []
+        self.data = dataObject
+        if dataObject != None:
+            self.dataColumn = len(dataObject) // self.maxX
+        else: self.dataColumn = 0
+        if self.data != None:
+            for obj in range(len(self.data)):
+                self.drawList.append(obj)
+        if len(self.drawList) % self.maxX != 0: # if this reutns a num it is the num of objs that dont copmplete the row
+            self.dataColumn += 1 # minipulates program into drawing our missing data from a null row
+            self.dataRow = self.maxX - (len(self.drawList) % self.maxX)
+
         
-
+class dynamicFormPopup:
             
-            
+    def __init__(self, x, y, w, h, formHeight, formInsize, formStackSpace, timerEvent, drawMode=True): # Not intended to update sizing, only to change messages and forms
+        self.x, self.y, self.w, self.h = x, y, w , h
+        self.formSize = formHeight
+        self.formInsize = formInsize # The spacing between the start of the window to the end of the window | exampe, formInsize = 5 means minus 5p  from both sides of form
+        self.formSpacing = formStackSpace # the spacing between the forms on the y axis | example, formStackSize = 15, means 15p space between each form form the one ontop. Will check if it cand raw all forms with thsi sapcing
 
+        self.timer = timerEvent
+        self.Mode = drawMode
+
+        # define important surfaces and vars here
+        self.surface = pygame.Surface((self.w, self.h))
+        self.fontObj = pygame.font.SysFont('Tahoma', 15)
+
+        self.Title = None
+        self.Messages = []  # msgList = [Ttitle, form1.Inactive, form2.Inactive, *form3*.Inactive] | formCount si the amoutn of forms stacked onto each other | * at the start of the form means this active message should be encrypted
+        self.forms = {} # {formName: formObject}
+
+        # Very Unimportant stuff
+        self.moveWindow = False
+        self.close = False
+
+
+    def updateForm(self, messageList, formHeight, formInsize, formStackSize):
+        if type(messageList) != list:
+            raise Exception("Invalid message data")
+        self.Title = messageList[0]
+        del messageList[0]
+        self.Messages = messageList
+        self.formInsize = formInsize
+        self.formSpacing = formStackSize
+        self.formSize = formHeight
+        #Generate forms
+        for form in range(len(self.Messages)):
+            if '*' not in self.Messages[form]:
+                #Message wont be encrypted
+                #x, y, w, h, message, timerEvent, mode=True, encryption=False, border=True, whFull=False
+                formObj = Form(self.x+self.formInsize, self.y+42+self.formInsize+(form*self.formSpacing), self.w-(self.formInsize*2), self.formSize, self.Messages[form], self.timer)
+                self.forms[self.Messages[form]] = formObj
+            else:
+                #Active form message to be encrypted
+                formObj = Form(self.x+self.formInsize, self.y+42+self.formInsize+(form*self.formSpacing), self.w-(self.formInsize*2), self.formSize, self.Messages[form].strip('*'), self.timer, True, True)
+                self.forms[self.Messages[form].strip('*')] = formObj
+                
+
+    def updateText(self, font, fontSize):
+        self.fontObj = pygame.font.SysFont(font, fontSize)
+
+
+
+
+    def moveableWindow(self, mouse): # Call in main loop and pass mouseObject to allow user to drag window around
+        self.x, self.y = mouse[0], mouse[1]
+
+    def draw(self, window, eventObject): # X, Y ARE SCREEN COORDS!!!!
+        self.surface.fill((255,255,255))
+
+        # Draw title and drag menu
+        pygame.draw.rect(self.surface, (0, 139, 139), (0, 0, self.w, 42)) # draw menu bg
+        surface.blit(self.font.render(self.Title, True, (240, 240, 240)), (15, 8)) # draw title
+        #draw cross over x btn
+        pygame.draw.line(self.surface, (47, 79, 79), (self.x+(self.y-40), 0), (self.x+(self.y-2), 40), 2) # \
+        pygame.draw.line(self.surface, (47, 79, 79), (self.x+(self.y-2), 0), (self.x+(self.y-40), 40), 2) # /
+
+
+
+        #Stop drawing here
+        window.blit(self.surface, (self.x, self.y))
+
+        # Handle Logic
+
+        # Handle window move and exit btn
+        mouse == pygame.mouse.get_pos()
+        for event in eventObject.list_events: # Event loop
+
+            if self.x+(self.w-42) > mouse[0] > self.x and self.y+42 > mouse[1] < self.y: # Inside main title area
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.moveWindow = True
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.moveWindow = False
+
+            if self.x+self.w > mouse[0] > self.x+(self.w-42) and self.y+42 > mouse[1] > self.y: # Inside exit btn
+                pygame.draw.rect(self.surface, (200, 0, 0), (self.x+(self.y-42), 0, 42, 42)) # draw red bg
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.close = True
+                
+
+                    
+        if self.moveWindow == True:
+            self.moveableWindow(mouse)
+
+class Switch:
+
+    def __init__(self, x, y, w, h, bg, fg, activefg, surface, eventObj):
+        self.x, self.y, self.w, self.h = x, y, w, h
+        self.window = surface
+        self.handler = eventObj
+
+        #Internal switch stuff
+        self.active = False
+
+        self.background = bg
+        self.foreground = fg
+        self.activeForeground = activefg
+
+    def draw(self):
+        pygame.draw.rect(self.window, self.background, (self.x, self.y, self.w, self.h), )
+            
