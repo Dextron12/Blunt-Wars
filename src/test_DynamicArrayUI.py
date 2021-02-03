@@ -4,10 +4,10 @@ from Scripts import PygUI as ui
 
 handler = ui.EventHandler(1024, 648)
 availableWeapons = []
-for obj in range(240):
+for obj in range(24):
     availableWeapons.append(obj)
 
-drawAvailableWeapons = ui.dynamicArray(10, 80, (handler.width-60)//2, handler.height-20, availableWeapons)
+drawAvailableWeapons = ui.dynamicArray(10, 80, (handler.width-60)//2, handler.height-30, handler.height-100,  availableWeapons)
 
 while True:
     handler.handle()
