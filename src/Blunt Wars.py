@@ -1,9 +1,8 @@
-import pygame, os
+import pygame, os, random
 
 from Scripts import PygUI as ui
 from ast import literal_eval
 from datetime import datetime
-from random import choice
 
 BASE_DIR = os.getcwd()
 BASE_DIR = BASE_DIR + '\\'
@@ -410,6 +409,8 @@ class Menu:
         self.memos = []
         self.memoMsg = None
         self.popMsg = False
+        self.globalSettings = {"Dark Mode": False, "Child Mode": False, "Global Multiplayer Servers": True, "Keep Logged": False}
+        self.keySettings = {"up": "w", "down": "s", "left": "a", "right": "d", "left_click": "btn1", "right_click": "btn2", "pause": "escape"}
 
         #Menu Swicthes
         self.HelpSwitch = False
@@ -421,8 +422,11 @@ class Menu:
             self.memos = data.split('\n')
         else:
             print("Error loading memos. Consider updating the game!")
+            pygame.quit()
 
     def settings(self):
+        #Declare Button switches
+        Switch1 = ui.Switch(10, 80, 60, 30, (0, 191, 255), (105, 105, 105), (255,255,255), handler.window, handler)
         while self.SettingsSwitch:
             handler.handle()
             handler.window.fill((105, 105, 105))
@@ -432,6 +436,10 @@ class Menu:
             pygame.draw.line(handler.window, (211, 211, 211), (0, 68), (handler.width, 68))
 
             # Control Settings
+
+            #Draw Switches
+            Switch1.draw()
+            
 
 
             pygame.display.flip()
@@ -462,7 +470,9 @@ class Menu:
 
     def draw(self):
         pygame.display.set_caption('Blunt Wars - Menu')
-        self.memoMsg = choice(self.memos)
+        self.memoMsg = random.choice(self.memos)
+        #create a random rotation for random memo
+        randomRotation = random.randrange(35, 95)
         while True:
             handler.handle()
             handler.window.fill((105, 105, 105))
