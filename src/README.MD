@@ -8,6 +8,9 @@ Features Included:
 - Multple countries
 - Creating/Ceasing Wars
 - Trade Wars
+- Global Wars
+- Biowarefare (Plague Inc kind of style)
+- Sandbox gameplay
 - New attack and defense strategies
 - mods
 - help
