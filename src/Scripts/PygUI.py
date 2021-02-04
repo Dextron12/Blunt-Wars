@@ -171,22 +171,25 @@ class Button(object):
             if init.click[0] == 1:
                 event()
 
-    def border(self, x, y, w, h, bg, fg, tc, msg, bc, borderSize, event):
-        pygame.draw.rect(init.window, bc, (x,y,w,h), borderSize)
-        pygame.draw.rect(init.window, bg, (x,y,w-borderSize,h-borderSize))
-        Text.generic(w//2,h//2, tc, "Arial", h//4, msg)
-        if x+w > init.mouse[0] > x and y+h > init.mouse[1] > y:
+    def border(self, x, y, w, h, bg, fg, tc, msg, bc, borderSize, event, handlerObject):
+        mouse = pygame.mouse.get_pos()
+        pygame.draw.rect(handlerObject.window, bc, (x,y,w,h), borderSize)
+        pygame.draw.rect(handlerObject.window, bg, (x,y,w-borderSize,h-borderSize))
+        text.generic(w//2,h//2, tc, "Arial", h//4, msg)
+        if x+w > mouse[0] > x and y+h > mouse[1] > y:
             if init.click[0] == 1:
                 event()
 
 
-    def returnClick(self, x, y, w, h, bg, fg, tc, msg, returnIdentifier):
-        pygame.draw.rect(init.window, bg, (x,y,w,h))
-        Text.generic(w//2,h//2, tc, "Arial", h//4, msg)
-        if x+w > init.mouse[0] > x and y+h > init.mouse[1] > Y:
-            if init.click[0] == 1:
-                returnIdentifier = True
-        if init.click[0] == 0:
+    def returnClick(self, x, y, w, h, bg, fg, tc, msg, returnIdentifier, handlerObject):
+        pygame.draw.rect(handlerObject.window, bg, (x,y,w,h))
+        text.generic(w//2,h//2, tc, "Arial", h//4, msg, handlerObject.window)
+        if x+w > handlerObject.mouse[0] > x and y+h > handlerObject.mouse[1] > y:
+            for event in handlerObject.event_list:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        return returnIdentifier
+        else:
             returnIdentifier = False
         return returnIdentifier
 
@@ -615,3 +618,5 @@ class Switch:
     def draw(self):
         pygame.draw.rect(self.window, self.background, (self.x, self.y, self.w, self.h), )
             
+#defines relevant objects
+button = Button()

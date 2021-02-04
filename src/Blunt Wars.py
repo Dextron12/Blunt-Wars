@@ -357,6 +357,52 @@ class Editor:
             
 
 
+
+
+# GAME MODES
+
+class Singleplayer:
+
+    def __init__(self):
+        self.selectModeSwitch = True
+        self.mode = None # "CVC=country v country, ww=world war, sp=scuffed_pervert, us=user_defined"
+
+    def selectMode(self):
+        """
+        available modes
+        1. Country V Country # Country battles single country
+        2. World War # 
+        3. Scuffed pervertation
+        4. Select user defined map
+        """
+        cvcSelect = False
+        while self.selectMode:
+            handler.handle()
+
+            handler.window.fill((105, 105, 105))
+            pygame.draw.rect(handler.window, (0, 191, 255), (0, handler.height-42, handler.width, 42))
+
+            cvcSelect = ui.button.returnClick(10, 80, (handler.width//2)-20, handler.height//30, (105, 105, 105), (0, 191, 255), (0,0,0), "Country Vs Country", cvcSelect, handler)
+
+            pygame.display.flip()
+
+
+
+"""
+class Multiplayer:
+
+    def __init__(self):
+        pass
+
+class Sandbox:
+
+    def __init__(self):
+        pass
+"""
+
+#define menu objects here
+singleplayer = Singleplayer() 
+
 class Menu:
     def __init__(self):
         pygame.time.set_timer(pygame.USEREVENT, 800)
@@ -466,7 +512,7 @@ class Menu:
             for event in handler.event_list:
                 if 20+(handler.width-50)//2 > mouse[0] > 20 and 115 > mouse[1] > 85:
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        print("Clicked singleplayer")
+                        singleplayer.selectMode()
                 if (30+(handler.width-50)//2)+(handler.width-50)//2 > mouse[0] > 20+(handler.width-50)//2 and 115 > mouse[1] > 85:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         print("Clicked Multiplayer")
@@ -484,26 +530,8 @@ class Menu:
                             self.help()
 
             pygame.display.flip()
-                
 
-# GAME MODES
-"""
-
-class Singleplayer:
-
-    def __init__(self):
-        pass
-
-class Multiplayer:
-
-    def __init__(self):
-        pass
-
-class Sandbox:
-
-    def __init__(self):
-        pass
-"""
+             
 
 menu = Menu()
 menu.draw()
