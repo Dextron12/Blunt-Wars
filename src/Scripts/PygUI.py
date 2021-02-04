@@ -203,6 +203,10 @@ class Button(object):
             pygame.draw.rect(init.window, bg, (x,y,w,h))
             Text.generic(w//2,h//2, tc, "Arial", h//4, msg)
 
+    def icoInfo(self, x, y, Icon, surface, handlerObject):
+        surface.blit(Icon, (x, y))
+        
+
 
 class imgButton:
 
@@ -650,7 +654,7 @@ class Switch:
             pygame.draw.rect(surface, color, rect_tmp)
 
     def draw(self):
-        draw_rounded_rect(self.window, pygame.Rect(self.x, self.y, self.w, self.h), self.background, 15)
+        self.draw_rounded_rect(self.window, pygame.Rect(self.x, self.y, self.w, self.h), self.background, 8)
             
 #defines relevant objects
 button = Button()

@@ -374,14 +374,56 @@ class Singleplayer:
         3. Scuffed pervertation
         4. Select user defined map
         """
-        cvcSelect = False
-        while self.selectMode:
+        infoBtn = pygame.image.load(BASE_DIR + "src\\Resources\\Icons\\info1.png")
+        while self.selectModeSwitch:
             handler.handle()
+
+            for event in handler.event_list:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.selectModeSwitch = False
 
             handler.window.fill((105, 105, 105))
             pygame.draw.rect(handler.window, (0, 191, 255), (0, handler.height-42, handler.width, 42))
 
-            cvcSelect = ui.button.returnClick(10, 80, (handler.width//2)-20, handler.height//30, (105, 105, 105), (0, 191, 255), (0,0,0), "Country Vs Country", cvcSelect, handler)
+            handler.window.blit(ui.text.bare((0,0,0), 'Tahoma', 24, 'Singleplayer Modes'), ((handler.width//2)-98, 32))
+            pygame.draw.line(handler.window, (211, 211, 211), (0, 68), (handler.width, 68))
+
+            #draw menu buttons
+            pygame.draw.rect(handler.window, (211, 211, 211), (10, 90, (handler.width//2)-20, 30)) #CVC
+            pygame.draw.rect(handler.window, (211, 211, 211), ((handler.width//2)+8, 90, (handler.width//2)-20, 30)) #WW
+            pygame.draw.rect(handler.window, (211, 211, 211), (10, 130, (handler.width//2)-20, 30)) #SP
+            pygame.draw.rect(handler.window, (211, 211, 211), ((handler.width//2)+8, 130, (handler.width//2)-20, 30)) # User defined
+
+            #Draw button headers
+            handler.window.blit(ui.text.bare((0,0,0), "Arial", 15, "Country Vs Country"), ((handler.width//4)-20, 92))
+            handler.window.blit(ui.text.bare((0,0,0), "Arial", 15, "Scuffed Pevertion"), ((handler.width//4)-20, 132))
+            handler.window.blit(ui.text.bare((0,0,0), "Arial", 15, "Global Domination"), ((handler.width//2)+10+((handler.width//4)-60), 92))
+            handler.window.blit(ui.text.bare((0,0,0), "Arial", 15, "Custom Map"), ((handler.width//2)+10+((handler.width//4)-60), 132))
+
+            #Draw Info Buttons
+            ui.button.icoInfo((handler.width//2)-28, 96, infoBtn, handler.window, handler)
+
+            mouse = pygame.mouse.get_pos()
+            for event in handler.event_list:
+                if 10+((handler.width//2)-20) > mouse[0] > 10 and 120 > mouse[1] > 90: # CVC
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            print("pressed CVC")
+                if ((handler.width//2)+8)+((handler.width//2)-20) > mouse[0] > (handler.width//2)+8 and 120 > mouse[1] > 90:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            print("Pressed Global Domination")
+                if 10+((handler.width//2)-20) > mouse[0] > 10 and 160 > mouse[1] > 130:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            print("Pressed sp")
+                if ((handler.width//2)+8)+((handler.width//2)-20) > mouse[0] > (handler.width//2)+8 and 160 > mouse[1] > 130:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            print("pressed custom map")
+
+            
 
             pygame.display.flip()
 
@@ -470,9 +512,12 @@ class Menu:
 
     def draw(self):
         pygame.display.set_caption('Blunt Wars - Menu')
+        if self.memos == []:
+            raise Exception("Memos Couldn't Be Found!")
         self.memoMsg = random.choice(self.memos)
         #create a random rotation for random memo
-        randomRotation = random.randrange(35, 95)
+        randomRotation = random.randrange(15, 45)
+        randomRotation = -randomRotation
         while True:
             handler.handle()
             handler.window.fill((105, 105, 105))
@@ -482,13 +527,14 @@ class Menu:
             #display memos with pooping effect
             if self.memos != []:
                 if self.popMsg:
-                    text = ui.text.bare((0, 0, 0), 'Arial', 18, self.memoMsg)
+                    text = ui.text.bare((139, 0, 0), 'Arial', 15, self.memoMsg)
                 else:
-                    text = ui.text.bare((0, 0, 0), 'Arial', 14, self.memoMsg)
+                    text = ui.text.bare((139, 0, 0), 'Arial', 14, self.memoMsg)
+                #Implement Random Rotation
 
                 handler.window.blit(text, ( ((handler.width//2)-(text.get_rect()[0]//2)), 55))
 
-            handler.window.blit(ui.text.bare((0,0,0), 'Tahoma', 24, 'Blunt Wars'), ((handler.width//2)-84, 32)) # header
+            handler.window.blit(ui.text.bare((0, 0, 0), 'Tahoma', 24, 'Blunt Wars'), ((handler.width//2)-84, 32)) # header
 
             # Draw menu buttons
             pygame.draw.rect(handler.window, (211, 211, 211), (20, 85, (handler.width-50)//2, 30)) # Singleplayer
@@ -522,6 +568,8 @@ class Menu:
             for event in handler.event_list:
                 if 20+(handler.width-50)//2 > mouse[0] > 20 and 115 > mouse[1] > 85:
                     if event.type == pygame.MOUSEBUTTONDOWN:
+                        if singleplayer.selectModeSwitch == False:
+                            singleplayer.selectModeSwitch = True
                         singleplayer.selectMode()
                 if (30+(handler.width-50)//2)+(handler.width-50)//2 > mouse[0] > 20+(handler.width-50)//2 and 115 > mouse[1] > 85:
                     if event.type == pygame.MOUSEBUTTONDOWN:
