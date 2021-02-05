@@ -375,6 +375,8 @@ class Singleplayer:
         4. Select user defined map
         """
         infoBtn = pygame.image.load(BASE_DIR + "src\\Resources\\Icons\\info1.png")
+        infoSurface = pygame.Surface((300,150))
+        infoSurface.fill((255, 255, 255))
         while self.selectModeSwitch:
             handler.handle()
 
@@ -402,7 +404,7 @@ class Singleplayer:
             handler.window.blit(ui.text.bare((0,0,0), "Arial", 15, "Custom Map"), ((handler.width//2)+10+((handler.width//4)-60), 132))
 
             #Draw Info Buttons
-            ui.button.icoInfo((handler.width//2)-28, 96, infoBtn, handler.window, handler)
+            ui.button.icoInfo((handler.width//2)-28, 96, infoBtn, handler.window, infoSurface, "Classical Country battles Country", handler)
 
             mouse = pygame.mouse.get_pos()
             for event in handler.event_list:

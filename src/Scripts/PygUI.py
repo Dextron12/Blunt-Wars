@@ -203,9 +203,13 @@ class Button(object):
             pygame.draw.rect(init.window, bg, (x,y,w,h))
             Text.generic(w//2,h//2, tc, "Arial", h//4, msg)
 
-    def icoInfo(self, x, y, Icon, surface, handlerObject):
+    def icoInfo(self, x, y, Icon, surface, infoSurface, infoMsg, handlerObject):
         surface.blit(Icon, (x, y))
+        w, h = Icon.get_rect()[2], Icon.get_rect()[3]
         
+        mouse = pygame.mouse.get_pos()
+        if x+w > mouse[0] > x and y+h > mouse[1] > y:
+            print("Mouse over info btn")
 
 
 class imgButton:
